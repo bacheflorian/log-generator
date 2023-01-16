@@ -3,3 +3,7 @@ Repository containing tools for generating semi-randomized computer telemetry (o
 
 # team-members
 Chinwe Ajieh
+- Andy Wu
+- Florian Bache
+- Ling Lee
+- David Zarinski
