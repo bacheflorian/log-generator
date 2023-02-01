@@ -10,6 +10,9 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * Contains logic for processing user requests and generating outputs specific to the user defined parameters
+ */
 @Data
 @Service
 public class StreamingService {
