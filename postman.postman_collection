@@ -1,0 +1,99 @@
+{
+	"info": {
+		"_postman_id": "41d4a3ea-74ef-40b5-9ab3-401dd13e3120",
+		"name": "log-generator",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "batch",
+			"item": [
+				{
+					"name": "valid_repeatedLines",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"repeatedLines\": \"2\",\r\n    \"batchSize\": \"30\",\r\n    \"timeStamp\": \"true\",\r\n    \"processingTime\": \"true\",\r\n    \"userId\": \"true\",\r\n    \"businessId\": \"true\",\r\n    \"filepath\": \"true\",\r\n    \"fileSHA256\": \"true\",\r\n    \"disposition\": \"true\",\r\n    \"modeSelection\": \"Batch\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/generate",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"generate"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "stream",
+			"item": [
+				{
+					"name": "valid_repeatedLines",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"repeatedLines\": \"2\",\r\n    \"batchSize\": \"30\",\r\n    \"timeStamp\": \"true\",\r\n    \"processingTime\": \"true\",\r\n    \"userId\": \"true\",\r\n    \"businessId\": \"true\",\r\n    \"filepath\": \"true\",\r\n    \"fileSHA256\": \"true\",\r\n    \"disposition\": \"true\",\r\n    \"modeSelection\": \"Stream\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/generate",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"generate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "valid_stopRequest",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/v1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
