@@ -6,4 +6,3 @@ Repository containing tools for generating semi-randomized computer telemetry (o
 - Chinwe Ajieh
 - Florian Bache
 - Ling Lee
-- David Zarinski
