@@ -21,13 +21,13 @@ function Settings() {
   const validate = values => {
     const errors = {};
 
-    // repeatingLoglines validation
+    // repeatingLoglinesPercent validation
     if (
-      isNaN(values.repeatingLoglines) ||
-      Number(values.repeatingLoglines) < 0 ||
-      Number(values.repeatingLoglines) > 100
+      isNaN(values.repeatingLoglinesPercent) ||
+      Number(values.repeatingLoglinesPercent) < 0 ||
+      Number(values.repeatingLoglinesPercent) > 100
     ) {
-      errors.repeatingLoglines = 'Must be between 0% and 100%';
+      errors.repeatingLoglinesPercent = 'Must be between 0% and 100%';
     }
 
     // mode validation
@@ -60,7 +60,7 @@ function Settings() {
   return (
     <Formik
       initialValues={{
-        repeatingLoglines: 0,
+        repeatingLoglinesPercent: 0,
         fields: {
           includeTimeStamp: true,
           includeProcessingTime: true,
@@ -77,8 +77,8 @@ function Settings() {
         },
         mode: 'Stream',
         stream: {
-          saveLogs: false,
           streamAddress: '',
+          saveLogs: false,
         },
         batch: {
           numberOfLogs: 0,
@@ -91,6 +91,7 @@ function Settings() {
 
         // display json output
         setTimeout(() => {
+          console.log(JSON.stringify(values, null, 2));
           alert(JSON.stringify(values, null, 2));
           actions.setSubmitting(false);
         }, 1000);
@@ -99,9 +100,9 @@ function Settings() {
       {props => (
         <Form>
           <VStack spacing="1.5em" align="flex-start">
-            <Field name="repeatingLoglines">
+            <Field name="repeatingLoglinesPercent">
               {({ field, form }) => (
-                <FormControl isInvalid={form.errors.repeatingLoglines}>
+                <FormControl isInvalid={form.errors.repeatingLoglinesPercent}>
                   <FormLabel>Repeating Loglines</FormLabel>
                   <InputGroup maxW="6em">
                     <NumberInput
@@ -119,7 +120,7 @@ function Settings() {
                     </NumberInput>
                   </InputGroup>
                   <FormErrorMessage>
-                    {form.errors.repeatingLoglines}
+                    {form.errors.repeatingLoglinesPercent}
                   </FormErrorMessage>
                 </FormControl>
               )}
@@ -222,11 +223,7 @@ function Settings() {
                       isInvalid={meta.touched && meta.error}
                     >
                       <FormLabel>Stream Address</FormLabel>
-                      <Input
-                        {...field}
-                        aria-required={false}
-                        placeholder="Stream address"
-                      />
+                      <Input {...field} placeholder="Stream address" />
                       <FormErrorMessage>{meta.error}</FormErrorMessage>
                     </FormControl>
                   )}
