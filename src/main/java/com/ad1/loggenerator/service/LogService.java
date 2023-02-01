@@ -8,7 +8,7 @@ import lombok.Data;
 import java.util.UUID;
 
 /**
- * Contains logic for processing user requests and generating outputs specific to the user defined parameters
+ * Contains logic for generating outputs specific to the user defined parameters
  */
 @Data
 @Service
@@ -27,36 +27,84 @@ public class LogService {
 
         // Generate log line data
         if (selectionModel.isTimeStamp()) {
-            logLine.setTimeStamp((long) ((System.currentTimeMillis() / 1000) * Math.random()));
+            logLine.setTimeStamp(generateTimeStamp());
             logLineJSON.put("timeStamp", logLine.getTimeStamp());
         }
         if (selectionModel.isProcessingTime()) {
-            logLine.setProcessingTime((long) (Math.random() * 1000));
+            logLine.setProcessingTime(generateProcessingTime());
             logLineJSON.put("processingTime", logLine.getProcessingTime());
         }
         if (selectionModel.isUserId()) {
-            logLine.setUserId(UUID.randomUUID());
+            logLine.setUserId(generateUserId());
             logLineJSON.put("userId", logLine.getUserId());
         }
         if (selectionModel.isBusinessId()) {
-            logLine.setBusinessId(UUID.randomUUID());
+            logLine.setBusinessId(generateBusinessId());
             logLineJSON.put("businessId", logLine.getBusinessId());
         }
 
 //        logLine.setFilepath(); // Requires it's own function
 
         if (selectionModel.isFileSHA256()) {
-            logLine.setFileSHA256(UUID.randomUUID());
+            logLine.setFileSHA256(generateFileSHA256());
             logLineJSON.put("fileSHA256", logLine.getFileSHA256());
         }
         if (selectionModel.isDisposition()) {
-            logLine.setDisposition((int) Math.random() * ((4 - 1) + 1) + 1); // 1 = Clean, 2 = Suspicious, 3 = Malicious, 4 = Unknown
+            logLine.setDisposition(generateDisposition()); // 1 = Clean, 2 = Suspicious, 3 = Malicious, 4 = Unknown
             logLineJSON.put("disposition", logLine.getDisposition());
         }
 
         // additional code required for malware
 
         return logLineJSON;
+    }
+
+    /**
+     * Utility method to generate a timestamp
+     * @return a timestamp
+     */
+    public long generateTimeStamp() {
+        return (long) ((System.currentTimeMillis() / 1000) * Math.random());
+    }
+
+    /**
+     * Utility method to generate processing time
+     * @return processing time in seconds
+     */
+    public long generateProcessingTime() {
+        return (long) (Math.random() * 1000);
+    }
+
+    /**
+     * Utility method to generate a user ID
+     * @return a unique id a user
+     */
+    public UUID generateUserId() {
+        return UUID.randomUUID();
+    }
+
+    /**
+     * Utility method to generate a business ID
+     * @return a unique id for a business
+     */
+    public UUID generateBusinessId() {
+        return UUID.randomUUID();
+    }
+
+    /**
+     * Utility method to generate a file SHA256
+     * @return a file SHA256
+     */
+    public UUID generateFileSHA256() {
+        return UUID.randomUUID();
+    }
+
+    /**
+     * Utility method to generate disposition
+     * @return a disposition
+     */
+    public int generateDisposition() {
+        return (int) Math.random() * ((4 - 1) + 1) + 1;
     }
 
 }
