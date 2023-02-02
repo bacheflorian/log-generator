@@ -1,5 +1,6 @@
 package com.ad1.loggenerator.service;
 
+import com.ad1.loggenerator.exception.FilePathNotFoundException;
 import com.ad1.loggenerator.model.SelectionModel;
 import org.json.simple.JSONObject;
 import org.springframework.stereotype.Service;
@@ -17,7 +18,7 @@ import java.time.format.DateTimeFormatter;
 @AllArgsConstructor
 @Service
 public class BatchService {
-    
+
     LogService logService;
 
     /**
@@ -48,7 +49,7 @@ public class BatchService {
             fileWriter.close();
 
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new FilePathNotFoundException(e.getMessage());
         }
         return "Successfully generated batch file";
     }

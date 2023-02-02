@@ -1,5 +1,6 @@
 package com.ad1.loggenerator.service;
 
+import com.ad1.loggenerator.exception.FilePathNotFoundException;
 import com.ad1.loggenerator.model.SelectionModel;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +17,7 @@ import java.time.format.DateTimeFormatter;
 @Data
 @Service
 public class StreamingService {
-    
+
     private LogService logService;
     private boolean continueStreaming; // starts and stops streaming
 
@@ -52,7 +53,7 @@ public class StreamingService {
             fileWriter.close();
 
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new FilePathNotFoundException(e.getMessage());
         }
         return "Successfully generated stream file";
     }
