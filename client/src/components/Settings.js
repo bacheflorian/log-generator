@@ -33,22 +33,23 @@ function Settings() {
     // mode validation
     if (values.mode === 'Stream') {
       // stream mode validation
-      if (values.stream.streamAddress === '') {
-        errors.stream = {};
-        errors.stream.streamAddress = 'Required';
+      if (values.streamSettings.streamAddress === '') {
+        errors.streamSettings = { streamAddress: 'Required' };
       }
     } else if (values.mode === 'Batch') {
       // batch mode validation
-      if (isNaN(values.batch.numberOfLogs)) {
-        errors.batch = {};
-        errors.batch.numberOfLogs = 'Must be a number';
-      } else if (Number(values.batch.numberOfLogs) < 1) {
-        errors.batch = {};
-        errors.batch.numberOfLogs = 'Must be more than 0';
-      } else if (Number(values.batch.numberOfLogs) > 1000000000) {
-        errors.batch = {};
-        errors.batch.numberOfLogs =
-          'Must be a number equal or below 1,000,000,000';
+      if (isNaN(values.batchSettings.numberOfLogs)) {
+        errors.batchSettings = {
+          numberOfLogs: 'Must be a number',
+        };
+      } else if (Number(values.batchSettings.numberOfLogs) < 1) {
+        errors.batchSettings = {
+          numberOfLogs: 'Must be more than 0',
+        };
+      } else if (Number(values.batchSettings.numberOfLogs) > 1000000000) {
+        errors.batchSettings = {
+          numberOfLogs: 'Must be a number equal or below 1,000,000,000',
+        };
       }
     } else {
       errors.mode = 'Invalid mode selected';
@@ -61,7 +62,7 @@ function Settings() {
     <Formik
       initialValues={{
         repeatingLoglinesPercent: 0,
-        fields: {
+        fieldSettings: {
           includeTimeStamp: true,
           includeProcessingTime: true,
           includeCurrentUserID: true,
@@ -70,24 +71,29 @@ function Settings() {
           includeFileSHA256: true,
           includeDisposition: true,
         },
-        malware: {
+        malwareSettings: {
           includeTrojan: false,
           includeAdware: false,
           includeRansom: false,
         },
         mode: 'Stream',
-        stream: {
+        streamSettings: {
           streamAddress: '',
           saveLogs: false,
         },
-        batch: {
+        batchSettings: {
           numberOfLogs: 0,
         },
       }}
       validate={validate}
       onSubmit={(values, actions) => {
+        //change repeatingLoglinesPercent to a decimal
+        values.repeatingLoglinesPercent = values.repeatingLoglinesPercent / 100;
+
         // round numberOfLogs to nearest integer
-        values.batch.numberOfLogs = Math.round(values.batch.numberOfLogs);
+        values.batchSettings.numberOfLogs = Math.round(
+          values.batchSettings.numberOfLogs
+        );
 
         // display json output
         setTimeout(() => {
@@ -130,49 +136,49 @@ function Settings() {
               <VStack spacing="0.75em" align="flex-start">
                 <Field
                   as={Checkbox}
-                  name="fields.includeTimeStamp"
+                  name="fieldSettings.includeTimeStamp"
                   defaultChecked
                 >
                   Time stamp
                 </Field>
                 <Field
                   as={Checkbox}
-                  name="fields.includeProcessingTime"
+                  name="fieldSettings.includeProcessingTime"
                   defaultChecked
                 >
                   Processing time
                 </Field>
                 <Field
                   as={Checkbox}
-                  name="fields.includeCurrentUserID"
+                  name="fieldSettings.includeCurrentUserID"
                   defaultChecked
                 >
                   Current user ID
                 </Field>
                 <Field
                   as={Checkbox}
-                  name="fields.includeBusinessGUID"
+                  name="fieldSettings.includeBusinessGUID"
                   defaultChecked
                 >
                   Business GUID
                 </Field>
                 <Field
                   as={Checkbox}
-                  name="fields.includePathToFile"
+                  name="fieldSettings.includePathToFile"
                   defaultChecked
                 >
                   Path to file
                 </Field>
                 <Field
                   as={Checkbox}
-                  name="fields.includeFileSHA256"
+                  name="fieldSettings.includeFileSHA256"
                   defaultChecked
                 >
                   File SHA256
                 </Field>
                 <Field
                   as={Checkbox}
-                  name="fields.includeDisposition"
+                  name="fieldSettings.includeDisposition"
                   defaultChecked
                 >
                   Disposition
@@ -182,13 +188,13 @@ function Settings() {
             <FormControl>
               <FormLabel>Include Malware:</FormLabel>
               <VStack spacing="0.75em" align="flex-start">
-                <Field as={Checkbox} name="malware.includeTrojan">
+                <Field as={Checkbox} name="malwareSettings.includeTrojan">
                   Trojan
                 </Field>
-                <Field as={Checkbox} name="malware.includeAdware">
+                <Field as={Checkbox} name="malwareSettings.includeAdware">
                   Adware
                 </Field>
-                <Field as={Checkbox} name="malware.includeRansom">
+                <Field as={Checkbox} name="malwareSettings.includeRansom">
                   Ransom
                 </Field>
               </VStack>
@@ -216,7 +222,7 @@ function Settings() {
             </Field>
             {props.values.mode === 'Stream' && (
               <VStack spacing="1em" align="flex-start">
-                <Field name="stream.streamAddress">
+                <Field name="streamSettings.streamAddress">
                   {({ field, meta }) => (
                     <FormControl
                       isRequired
@@ -228,14 +234,14 @@ function Settings() {
                     </FormControl>
                   )}
                 </Field>
-                <Field as={Checkbox} name="stream.saveLogs">
+                <Field as={Checkbox} name="streamSettings.saveLogs">
                   Save logs
                 </Field>
               </VStack>
             )}
             {props.values.mode === 'Batch' && (
               <div>
-                <Field name="batch.numberOfLogs">
+                <Field name="batchSettings.numberOfLogs">
                   {({ field, form, meta }) => (
                     <FormControl
                       isRequired

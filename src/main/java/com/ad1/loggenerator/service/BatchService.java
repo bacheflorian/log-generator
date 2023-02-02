@@ -35,7 +35,7 @@ public class BatchService {
      */
     public String batchMode(SelectionModel selectionModel) {
         try {
-            // batch mode settings
+            // batch settings
             BatchSettings batchSettings = selectionModel.getBatchSettings();
 
             // create currentTimeDate as a String to append to filepath

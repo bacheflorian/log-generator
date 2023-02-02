@@ -47,7 +47,7 @@ public class StreamingService {
             String timestamp = currentDateTime.format(formatDateTime);
 
             // specify filepath location for stream file
-            String filename = timestamp + ".json";
+            String filename = "C:\\log-generator\\batch\\" + timestamp + ".json";
             FileWriter fileWriter = new FileWriter(filename);
 
             while (isContinueStreaming()) {
