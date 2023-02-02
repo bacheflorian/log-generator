@@ -16,7 +16,7 @@ import java.time.format.DateTimeFormatter;
 @Data
 @Service
 public class StreamingService {
-    
+
     private LogService logService;
     private boolean continueStreaming; // starts and stops streaming
 

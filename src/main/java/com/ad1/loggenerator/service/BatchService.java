@@ -17,7 +17,7 @@ import java.time.format.DateTimeFormatter;
 @AllArgsConstructor
 @Service
 public class BatchService {
-    
+
     LogService logService;
 
     /**
