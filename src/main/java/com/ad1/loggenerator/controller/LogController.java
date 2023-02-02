@@ -3,13 +3,9 @@ package com.ad1.loggenerator.controller;
 import com.ad1.loggenerator.model.SelectionModel;
 import com.ad1.loggenerator.service.BatchService;
 import com.ad1.loggenerator.service.LogService;
-<<<<<<< HEAD
-
+import com.ad1.loggenerator.service.StreamingService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-=======
-import com.ad1.loggenerator.service.StreamingService;
->>>>>>> upstream/main
 import org.springframework.web.bind.annotation.*;
 import lombok.AllArgsConstructor;
 
@@ -29,19 +25,11 @@ public class LogController {
     public ResponseEntity<String> generateRequest (@RequestBody SelectionModel selectionModel) {
 
         if (selectionModel.getModeSelection().equals("Batch")) {
-<<<<<<< HEAD
-            return new ResponseEntity<>(logService.batchMode(selectionModel), HttpStatus.OK);
-        }
-        else if (selectionModel.getModeSelection().equals("Stream")) {
-            logService.setContinueStreaming(true);
-            return new ResponseEntity<>(logService.streamMode(selectionModel), HttpStatus.OK);
-=======
-            return batchService.batchMode(selectionModel);
+            return new ResponseEntity<>(batchService.batchMode(selectionModel), HttpStatus.OK);
         }
         else if (selectionModel.getModeSelection().equals("Stream")) {
             streamingService.setContinueStreaming(true);
-            return streamingService.streamMode(selectionModel);
->>>>>>> upstream/main
+            return new ResponseEntity<>(streamingService.streamMode(selectionModel), HttpStatus.OK);
         }
         else {
             return new ResponseEntity<>("Invalid Request. Try again", HttpStatus.BAD_REQUEST);
@@ -50,15 +38,8 @@ public class LogController {
 
     // stop streaming request
     @PostMapping("/stop")
-<<<<<<< HEAD
     public ResponseEntity<String> stopRequest () {
-        logService.setContinueStreaming(false);
-        return new ResponseEntity<>("Streaming has stopped.", HttpStatus.OK);
-=======
-    public String stopRequest () {
         streamingService.setContinueStreaming(false);
-        return "Streaming has stopped.";
->>>>>>> upstream/main
+        return new ResponseEntity<>("Streaming has stopped.", HttpStatus.OK);
     }
-
 }
