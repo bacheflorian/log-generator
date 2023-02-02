@@ -1,18 +1,23 @@
 package com.ad1.loggenerator.service;
 
-import com.ad1.loggenerator.exception.FilePathNotFoundException;
-import com.ad1.loggenerator.model.SelectionModel;
-import org.json.simple.JSONObject;
-import org.springframework.stereotype.Service;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import org.json.simple.JSONObject;
+import org.springframework.stereotype.Service;
+
+import com.ad1.loggenerator.exception.FilePathNotFoundException;
+import com.ad1.loggenerator.model.BatchSettings;
+import com.ad1.loggenerator.model.SelectionModel;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
 /**
- * Contains logic for processing user requests and generating outputs specific to the user defined parameters
+ * Contains logic for processing user requests and generating outputs specific
+ * to the user defined parameters
  */
 @Data
 @AllArgsConstructor
@@ -23,11 +28,16 @@ public class BatchService {
 
     /**
      * Generates and populates the batch file
-     * @param selectionModel defines all the parameters to be included in the batch files as per the user
+     * 
+     * @param selectionModel defines all the parameters to be included in the batch
+     *                       files as per the user
      * @return
      */
     public String batchMode(SelectionModel selectionModel) {
         try {
+            // batch mode settings
+            BatchSettings batchSettings = selectionModel.getBatchSettings();
+
             // create currentTimeDate as a String to append to filepath
             LocalDateTime currentDateTime = LocalDateTime.now();
             DateTimeFormatter formatDateTime = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
@@ -38,9 +48,11 @@ public class BatchService {
             FileWriter fileWriter = new FileWriter(filename);
 
             // add log lines to batch file
-            for (int i = 0; i < selectionModel.getBatchSize(); i++){ // repeat for specified batch size
+            for (int i = 0; i < batchSettings.getNumberOfLogs(); i++) { // repeat for specified batch size
                 JSONObject logLine = logService.generateLogLine(selectionModel);
-                for (int j = 0; j < selectionModel.getRepeatedLines() - 1 && i < selectionModel.getBatchSize() - 1; j++, i++) { // repeated for specified number of repeated lines size
+                for (int j = 0; j < selectionModel.getRepeatingLoglinesPercent() - 1
+                        && i < batchSettings.getNumberOfLogs() - 1; j++, i++) { // repeated for specified number of
+                                                                                // repeated lines size
                     fileWriter.write(logLine.toString() + "\n");
 
                 }
