@@ -5,6 +5,9 @@ import com.ad1.loggenerator.model.SelectionModel;
 import org.json.simple.JSONObject;
 import org.springframework.stereotype.Service;
 import lombok.Data;
+
+import java.io.File;
+import java.util.Random;
 import java.util.UUID;
 
 /**
@@ -43,7 +46,10 @@ public class LogService {
             logLineJSON.put("businessId", logLine.getBusinessId());
         }
 
-//        logLine.setFilepath(); // Requires it's own function
+        if (selectionModel.isFilepath()) {
+            logLine.setFilepath(generateFilepath());
+            logLineJSON.put("filepath", logLine.getFilepath().replace("\\\\", "\\"));
+        }
 
         if (selectionModel.isFileSHA256()) {
             logLine.setFileSHA256(generateFileSHA256());
@@ -92,6 +98,29 @@ public class LogService {
     }
 
     /**
+     * Utility method to generate a filepath
+     * @return a random filepath
+     */
+    public String generateFilepath() {
+        // random information
+        String[] folders = {"C:/Program Files", "C:/Windows", "C:/Program Files (x86)", "C:/Program Files (x86)/Common Files", "/tmp", "/home"};
+        String[] ext = {".pdf", ".xlsx", ".csv", ".txt", ".json", ".sys", ".docx", ".jpg", ".zip"};
+
+        // get random path to file
+        Random random = new Random();
+        int index = random.nextInt(folders.length);
+        String pathToFile = folders[index];
+
+        // get random filename and extension
+        index = random.nextInt(ext.length);
+        String filename = UUID.randomUUID().toString() + ext[index];
+
+        // combine and return
+        File file = new File(pathToFile, filename);
+        return file.getAbsolutePath();
+    }
+
+    /**
      * Utility method to generate a file SHA256
      * @return a file SHA256
      */
@@ -104,7 +133,7 @@ public class LogService {
      * @return a disposition
      */
     public int generateDisposition() {
-        return (int) Math.random() * ((4 - 1) + 1) + 1;
+        return (int) (Math.random() * ((4 - 1) + 1) + 1);
     }
 
 }

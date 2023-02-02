@@ -15,7 +15,7 @@ public class LogModel {
     private long processingTime;
     private UUID userId;
     private UUID businessId;
-    private String filepath = "C:\\corruptedFiles"; // make null once function is built
+    private String filepath;
     private UUID fileSHA256;
     private int disposition;
 
