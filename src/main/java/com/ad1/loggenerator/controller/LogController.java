@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ad1.loggenerator.model.SelectionModel;
-import com.ad1.loggenerator.service.BatchService;
-import com.ad1.loggenerator.service.StreamingService;
+import com.ad1.loggenerator.service.implementation.BatchService;
+import com.ad1.loggenerator.service.implementation.StreamingService;
 
 import lombok.AllArgsConstructor;
 
@@ -18,19 +18,26 @@ import lombok.AllArgsConstructor;
  */
 @AllArgsConstructor
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/generate")
 public class LogController {
 
     private final BatchService batchService;
     private final StreamingService streamingService;
 
     // general request for generating batch files or streaming
-    @PostMapping("/generate")
-    public ResponseEntity<String> generateRequest(@RequestBody SelectionModel selectionModel) {
+    @PostMapping("/batch")
+    public ResponseEntity<String> generateBatchRequest(@RequestBody SelectionModel selectionModel) {
 
         if (selectionModel.getMode().equals("Batch")) {
             return new ResponseEntity<>(batchService.batchMode(selectionModel), HttpStatus.OK);
-        } else if (selectionModel.getMode().equals("Stream")) {
+        } else {
+            return new ResponseEntity<>("Invalid Request. Try again", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("/stream")
+    public ResponseEntity<String> generateStreamRequest(@RequestBody SelectionModel selectionModel) {
+        if (selectionModel.getMode().equals("Stream")) {
             streamingService.setContinueStreaming(true);
             return new ResponseEntity<>(streamingService.streamMode(selectionModel), HttpStatus.OK);
         } else {
@@ -39,7 +46,7 @@ public class LogController {
     }
 
     // stop streaming request
-    @PostMapping("/stop")
+    @PostMapping("/stream/stop")
     public ResponseEntity<String> stopRequest() {
         streamingService.setContinueStreaming(false);
         return new ResponseEntity<>("Streaming has stopped.", HttpStatus.OK);
