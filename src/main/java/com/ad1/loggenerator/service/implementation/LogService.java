@@ -1,9 +1,10 @@
-package com.ad1.loggenerator.service;
+package com.ad1.loggenerator.service.implementation;
 
 import java.io.File;
 import java.util.Random;
 import java.util.UUID;
 
+import com.ad1.loggenerator.service.LogServiceInterface;
 import org.json.simple.JSONObject;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +19,7 @@ import lombok.Data;
  */
 @Data
 @Service
-public class LogService {
+public class LogService implements LogServiceInterface {
 
     /**
      * Generates each log line as defined by the parameters
