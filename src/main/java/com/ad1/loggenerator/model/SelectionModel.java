@@ -9,33 +9,22 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class SelectionModel {
 
-    // repeated lines
-    private int repeatedLines = 10; // default unless otherwise specified
+    // percent chance a logline should repeat, expressed as a decimal
+    private int repeatingLoglinesPercent = 0; // default unless otherwise specified
 
-    // batch file size
-    private int batchSize = 4000; // default unless otherwise specified
+    // field settings
+    private FieldSettings fieldSettings;
 
-    // included fields
-    private boolean timeStamp;
-    private boolean processingTime;
-    private boolean userId;
-    private boolean businessId;
-    private boolean filepath;
-    private boolean fileSHA256;
-    private boolean disposition;
-
-//    // include malware
-//    private boolean trojan;
-//    private boolean adware;
-//    private boolean ransom;
+    // malware settings
+    private MalwareSettings malwareSettings;
 
     // mode selection
-    private String modeSelection;
+    private String mode;
 
-//    // save logs
-//    private boolean saveLogs;
-//
-//    // stream address
-//    private String streamAddress;
+    // stream mode settings
+    private StreamSettings streamSettings;
+
+    // batch mode settings
+    private BatchSettings batchSettings;
 
 }

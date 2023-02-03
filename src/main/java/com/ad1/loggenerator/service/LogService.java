@@ -1,14 +1,17 @@
 package com.ad1.loggenerator.service;
 
-import com.ad1.loggenerator.model.LogModel;
-import com.ad1.loggenerator.model.SelectionModel;
-import org.json.simple.JSONObject;
-import org.springframework.stereotype.Service;
-import lombok.Data;
-
 import java.io.File;
 import java.util.Random;
 import java.util.UUID;
+
+import org.json.simple.JSONObject;
+import org.springframework.stereotype.Service;
+
+import com.ad1.loggenerator.model.FieldSettings;
+import com.ad1.loggenerator.model.LogModel;
+import com.ad1.loggenerator.model.SelectionModel;
+
+import lombok.Data;
 
 /**
  * Contains logic for generating outputs specific to the user defined parameters
@@ -19,43 +22,48 @@ public class LogService {
 
     /**
      * Generates each log line as defined by the parameters
-     * @param selectionModel defines all the parameters to be included in the log lines as per the user
+     * 
+     * @param selectionModel defines all the parameters to be included in the log
+     *                       lines as per the user
      * @return a single log line in JSON format
      */
     public JSONObject generateLogLine(SelectionModel selectionModel) {
+
+        // generated fields settings
+        FieldSettings fieldSettings = selectionModel.getFieldSettings();
 
         // Create logline objects
         LogModel logLine = new LogModel();
         JSONObject logLineJSON = new JSONObject();
 
         // Generate log line data
-        if (selectionModel.isTimeStamp()) {
+        if (fieldSettings.isIncludeTimeStamp()) {
             logLine.setTimeStamp(generateTimeStamp());
             logLineJSON.put("timeStamp", logLine.getTimeStamp());
         }
-        if (selectionModel.isProcessingTime()) {
+        if (fieldSettings.isIncludeProcessingTime()) {
             logLine.setProcessingTime(generateProcessingTime());
             logLineJSON.put("processingTime", logLine.getProcessingTime());
         }
-        if (selectionModel.isUserId()) {
+        if (fieldSettings.isIncludeCurrentUserID()) {
             logLine.setUserId(generateUserId());
             logLineJSON.put("userId", logLine.getUserId());
         }
-        if (selectionModel.isBusinessId()) {
+        if (fieldSettings.isIncludeBusinessGUID()) {
             logLine.setBusinessId(generateBusinessId());
             logLineJSON.put("businessId", logLine.getBusinessId());
         }
 
-        if (selectionModel.isFilepath()) {
+        if (fieldSettings.isIncludePathToFile()) {
             logLine.setFilepath(generateFilepath());
             logLineJSON.put("filepath", logLine.getFilepath().replace("\\\\", "\\"));
         }
 
-        if (selectionModel.isFileSHA256()) {
+        if (fieldSettings.isIncludeFileSHA256()) {
             logLine.setFileSHA256(generateFileSHA256());
             logLineJSON.put("fileSHA256", logLine.getFileSHA256());
         }
-        if (selectionModel.isDisposition()) {
+        if (fieldSettings.isIncludeDisposition()) {
             logLine.setDisposition(generateDisposition()); // 1 = Clean, 2 = Suspicious, 3 = Malicious, 4 = Unknown
             logLineJSON.put("disposition", logLine.getDisposition());
         }
@@ -67,6 +75,7 @@ public class LogService {
 
     /**
      * Utility method to generate a timestamp
+     * 
      * @return a timestamp
      */
     public long generateTimeStamp() {
@@ -75,6 +84,7 @@ public class LogService {
 
     /**
      * Utility method to generate processing time
+     * 
      * @return processing time in seconds
      */
     public long generateProcessingTime() {
@@ -83,6 +93,7 @@ public class LogService {
 
     /**
      * Utility method to generate a user ID
+     * 
      * @return a unique id a user
      */
     public UUID generateUserId() {
@@ -91,6 +102,7 @@ public class LogService {
 
     /**
      * Utility method to generate a business ID
+     * 
      * @return a unique id for a business
      */
     public UUID generateBusinessId() {
@@ -99,12 +111,14 @@ public class LogService {
 
     /**
      * Utility method to generate a filepath
+     * 
      * @return a random filepath
      */
     public String generateFilepath() {
         // random information
-        String[] folders = {"C:/Program Files", "C:/Windows", "C:/Program Files (x86)", "C:/Program Files (x86)/Common Files", "/tmp", "/home"};
-        String[] ext = {".pdf", ".xlsx", ".csv", ".txt", ".json", ".sys", ".docx", ".jpg", ".zip"};
+        String[] folders = { "C:/Program Files", "C:/Windows", "C:/Program Files (x86)",
+                "C:/Program Files (x86)/Common Files", "/tmp", "/home" };
+        String[] ext = { ".pdf", ".xlsx", ".csv", ".txt", ".json", ".sys", ".docx", ".jpg", ".zip" };
 
         // get random path to file
         Random random = new Random();
@@ -122,6 +136,7 @@ public class LogService {
 
     /**
      * Utility method to generate a file SHA256
+     * 
      * @return a file SHA256
      */
     public UUID generateFileSHA256() {
@@ -130,6 +145,7 @@ public class LogService {
 
     /**
      * Utility method to generate disposition
+     * 
      * @return a disposition
      */
     public int generateDisposition() {
