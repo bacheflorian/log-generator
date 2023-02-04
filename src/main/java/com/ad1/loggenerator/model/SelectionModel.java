@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 public class SelectionModel {
 
     // percent chance a logline should repeat, expressed as a decimal
-    private int repeatingLoglinesPercent = 0; // default unless otherwise specified
+    private double repeatingLoglinesPercent;
 
     // field settings
     private FieldSettings fieldSettings;

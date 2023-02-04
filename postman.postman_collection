@@ -1,22 +1,81 @@
 {
 	"info": {
-		"_postman_id": "1c33cd1d-462d-4f66-90d3-8279415a5de1",
+		"_postman_id": "7a513083-f19d-43f7-bbb5-ea60c882dd19",
 		"name": "log-generator",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "24627710"
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
 			"name": "stream",
 			"item": [
 				{
-					"name": "valid_repeatedLines",
+					"name": "valid_streamToFile",
 					"request": {
 						"method": "POST",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n  \"repeatingLoglinesPercent\": 0.068,\r\n  \"fieldSettings\": {\r\n    \"includeTimeStamp\": true,\r\n    \"includeProcessingTime\": true,\r\n    \"includeCurrentUserID\": true,\r\n    \"includeBusinessGUID\": false,\r\n    \"includePathToFile\": true,\r\n    \"includeFileSHA256\": true,\r\n    \"includeDisposition\": true\r\n  },\r\n  \"malwareSettings\": {\r\n    \"includeTrojan\": true,\r\n    \"includeAdware\": false,\r\n    \"includeRansom\": false\r\n  },\r\n  \"mode\": \"Stream\",\r\n  \"streamSettings\": {\r\n    \"streamAddress\": \"test\",\r\n    \"saveLogs\": false\r\n  },\r\n  \"batchSettings\": {\r\n    \"numberOfLogs\": 0\r\n  }\r\n}",
+							"raw": "{\r\n  \"repeatingLoglinesPercent\": 0.68,\r\n  \"fieldSettings\": {\r\n    \"includeTimeStamp\": true,\r\n    \"includeProcessingTime\": true,\r\n    \"includeCurrentUserID\": true,\r\n    \"includeBusinessGUID\": false,\r\n    \"includePathToFile\": true,\r\n    \"includeFileSHA256\": true,\r\n    \"includeDisposition\": true\r\n  },\r\n  \"malwareSettings\": {\r\n    \"includeTrojan\": true,\r\n    \"includeAdware\": false,\r\n    \"includeRansom\": false\r\n  },\r\n  \"mode\": \"Stream\",\r\n  \"streamSettings\": {\r\n    \"streamAddress\": \"\",\r\n    \"saveLogs\": false\r\n  },\r\n  \"batchSettings\": {\r\n    \"numberOfLogs\": 0\r\n  }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/generate",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"generate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "valid_streamToAddress",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"repeatingLoglinesPercent\": 0.68,\r\n  \"fieldSettings\": {\r\n    \"includeTimeStamp\": true,\r\n    \"includeProcessingTime\": true,\r\n    \"includeCurrentUserID\": true,\r\n    \"includeBusinessGUID\": false,\r\n    \"includePathToFile\": true,\r\n    \"includeFileSHA256\": true,\r\n    \"includeDisposition\": true\r\n  },\r\n  \"malwareSettings\": {\r\n    \"includeTrojan\": true,\r\n    \"includeAdware\": false,\r\n    \"includeRansom\": false\r\n  },\r\n  \"mode\": \"Stream\",\r\n  \"streamSettings\": {\r\n    \"streamAddress\": \"http://localhost:8080/api/v1/streamAddress\",\r\n    \"saveLogs\": false\r\n  },\r\n  \"batchSettings\": {\r\n    \"numberOfLogs\": 0\r\n  }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/generate",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"generate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "invalid_streamToAddress",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"repeatingLoglinesPercent\": 0.68,\r\n  \"fieldSettings\": {\r\n    \"includeTimeStamp\": true,\r\n    \"includeProcessingTime\": true,\r\n    \"includeCurrentUserID\": true,\r\n    \"includeBusinessGUID\": false,\r\n    \"includePathToFile\": true,\r\n    \"includeFileSHA256\": true,\r\n    \"includeDisposition\": true\r\n  },\r\n  \"malwareSettings\": {\r\n    \"includeTrojan\": true,\r\n    \"includeAdware\": false,\r\n    \"includeRansom\": false\r\n  },\r\n  \"mode\": \"Stream\",\r\n  \"streamSettings\": {\r\n    \"streamAddress\": \"http://localhost:8080/api/v1/invalid_streamAddress\",\r\n    \"saveLogs\": false\r\n  },\r\n  \"batchSettings\": {\r\n    \"numberOfLogs\": 0\r\n  }\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -44,6 +103,10 @@
 					"request": {
 						"method": "POST",
 						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
 						"url": {
 							"raw": "http://localhost:8080/api/v1/stop",
 							"protocol": "http",
@@ -66,13 +129,13 @@
 			"name": "batch",
 			"item": [
 				{
-					"name": "valid_repeatedLines",
+					"name": "valid_generateBatchFile",
 					"request": {
 						"method": "POST",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n  \"repeatingLoglinesPercent\": 0.055,\r\n  \"fieldSettings\": {\r\n    \"includeTimeStamp\": true,\r\n    \"includeProcessingTime\": true,\r\n    \"includeCurrentUserID\": false,\r\n    \"includeBusinessGUID\": true,\r\n    \"includePathToFile\": true,\r\n    \"includeFileSHA256\": true,\r\n    \"includeDisposition\": true\r\n  },\r\n  \"malwareSettings\": {\r\n    \"includeTrojan\": false,\r\n    \"includeAdware\": false,\r\n    \"includeRansom\": false\r\n  },\r\n  \"mode\": \"Batch\",\r\n  \"streamSettings\": {\r\n    \"streamAddress\": \"\",\r\n    \"saveLogs\": false\r\n  },\r\n  \"batchSettings\": {\r\n    \"numberOfLogs\": 1237\r\n  }\r\n}",
+							"raw": "{\r\n  \"repeatingLoglinesPercent\": 0.15,\r\n  \"fieldSettings\": {\r\n    \"includeTimeStamp\": true,\r\n    \"includeProcessingTime\": true,\r\n    \"includeCurrentUserID\": false,\r\n    \"includeBusinessGUID\": true,\r\n    \"includePathToFile\": true,\r\n    \"includeFileSHA256\": true,\r\n    \"includeDisposition\": true\r\n  },\r\n  \"malwareSettings\": {\r\n    \"includeTrojan\": false,\r\n    \"includeAdware\": false,\r\n    \"includeRansom\": false\r\n  },\r\n  \"mode\": \"Batch\",\r\n  \"streamSettings\": {\r\n    \"streamAddress\": \"\",\r\n    \"saveLogs\": false\r\n  },\r\n  \"batchSettings\": {\r\n    \"numberOfLogs\": 1237\r\n  }\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
