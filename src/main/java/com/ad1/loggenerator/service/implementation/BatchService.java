@@ -4,10 +4,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.UUID;
 
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.ad1.loggenerator.exception.FilePathNotFoundException;
@@ -27,6 +29,7 @@ public class BatchService {
 
     private SimpMessagingTemplate template;
     private LogService logService;
+    private final int sendBatchDataFrequency = 10000;
 
     public BatchService(@Autowired SimpMessagingTemplate template, @Autowired LogService logService) {
         this.template = template;
@@ -40,12 +43,13 @@ public class BatchService {
      *                       files as per the user
      * @return
      */
-    public String batchMode(SelectionModel selectionModel) {
+    @Async("asyncTaskExecutor")
+    public void batchMode(SelectionModel selectionModel) {
         try {
             // batch settings
             BatchSettings batchSettings = selectionModel.getBatchSettings();
 
-            int clientId = selectionModel.getClientId();
+            String jobId = selectionModel.getJobId();
             int logLineCount = 0;
 
             // create currentTimeDate as a String to append to filepath
@@ -65,28 +69,35 @@ public class BatchService {
                                                                                 // repeated lines size
                     fileWriter.write(logLine.toString() + "\n");
                     logLineCount++;
-                    sendBatchData(clientId, logLineCount, System.currentTimeMillis() / 1000);
-
+                    if (logLineCount % sendBatchDataFrequency == 0) {
+                        sendBatchData(jobId, logLineCount, System.currentTimeMillis() / 1000);
+                    }
                 }
                 fileWriter.write(logLine.toString() + "\n");
                 logLineCount++;
-                sendBatchData(clientId, logLineCount, System.currentTimeMillis() / 1000);
+                if (logLineCount % sendBatchDataFrequency == 0) {
+                    sendBatchData(jobId, logLineCount, System.currentTimeMillis() / 1000);
+                }
             }
             fileWriter.close();
 
         } catch (IOException e) {
             throw new FilePathNotFoundException(e.getMessage());
         }
-        return "Successfully generated batch file";
+        
     }
 
     /**
      * Sends log data for a batch job to the specified clientId
      */
-    public void sendBatchData(int clientId, int logLineCount, long timeStamp) {
-        String destination = "/topic/batch/" + clientId;
+    public void sendBatchData(String jobId, int logLineCount, long timeStamp) {
+        String destination = "/topic/batch/" + jobId;
         LogMessage message = new LogMessage(logLineCount, timeStamp);
         template.convertAndSend(destination, message);
+    }
+
+    public String generateJobId() {
+        return UUID.randomUUID().toString();
     }
 
 }

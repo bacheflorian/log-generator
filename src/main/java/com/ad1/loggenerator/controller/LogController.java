@@ -33,7 +33,10 @@ public class LogController {
     public ResponseEntity<String> generateBatchRequest(@RequestBody SelectionModel selectionModel) {
 
         if (selectionModel.getMode().equals("Batch")) {
-            return new ResponseEntity<>(batchService.batchMode(selectionModel), HttpStatus.OK);
+            String jobId = batchService.generateJobId();
+            selectionModel.setJobId(jobId);
+            batchService.batchMode(selectionModel);
+            return new ResponseEntity<>(jobId, HttpStatus.OK);
         } else {
             return new ResponseEntity<>("Invalid Request. Try again", HttpStatus.BAD_REQUEST);
         }
