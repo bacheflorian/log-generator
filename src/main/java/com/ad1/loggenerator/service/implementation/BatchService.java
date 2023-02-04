@@ -6,13 +6,15 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import com.ad1.loggenerator.exception.FilePathNotFoundException;
 import com.ad1.loggenerator.model.BatchSettings;
+import com.ad1.loggenerator.model.LogMessage;
 import com.ad1.loggenerator.model.SelectionModel;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**
@@ -20,11 +22,16 @@ import lombok.Data;
  * to the user defined parameters
  */
 @Data
-@AllArgsConstructor
 @Service
 public class BatchService {
 
-    LogService logService;
+    private SimpMessagingTemplate template;
+    private LogService logService;
+
+    public BatchService(@Autowired SimpMessagingTemplate template, @Autowired LogService logService) {
+        this.template = template;
+        this.logService = logService;
+    }
 
     /**
      * Generates and populates the batch file
@@ -37,6 +44,9 @@ public class BatchService {
         try {
             // batch settings
             BatchSettings batchSettings = selectionModel.getBatchSettings();
+
+            int clientId = selectionModel.getClientId();
+            int logLineCount = 0;
 
             // create currentTimeDate as a String to append to filepath
             LocalDateTime currentDateTime = LocalDateTime.now();
@@ -54,9 +64,13 @@ public class BatchService {
                         && i < batchSettings.getNumberOfLogs() - 1; j++, i++) { // repeated for specified number of
                                                                                 // repeated lines size
                     fileWriter.write(logLine.toString() + "\n");
+                    logLineCount++;
+                    sendBatchData(clientId, logLineCount, System.currentTimeMillis() / 1000);
 
                 }
                 fileWriter.write(logLine.toString() + "\n");
+                logLineCount++;
+                sendBatchData(clientId, logLineCount, System.currentTimeMillis() / 1000);
             }
             fileWriter.close();
 
@@ -64,6 +78,15 @@ public class BatchService {
             throw new FilePathNotFoundException(e.getMessage());
         }
         return "Successfully generated batch file";
+    }
+
+    /**
+     * Sends log data for a batch job to the specified clientId
+     */
+    public void sendBatchData(int clientId, int logLineCount, long timeStamp) {
+        String destination = "/topic/batch/" + clientId;
+        LogMessage message = new LogMessage(logLineCount, timeStamp);
+        template.convertAndSend(destination, message);
     }
 
 }
