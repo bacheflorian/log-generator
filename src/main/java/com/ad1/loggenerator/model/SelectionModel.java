@@ -9,6 +9,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class SelectionModel {
 
+    // unique client id for the front end
+    private int clientId;
+    
     // percent chance a logline should repeat, expressed as a decimal
     private int repeatingLoglinesPercent = 0; // default unless otherwise specified
 
