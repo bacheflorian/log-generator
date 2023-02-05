@@ -10,5 +10,5 @@ import lombok.NoArgsConstructor;
 public class BatchSettings {
 
     // number of logs to generate in batch
-    private int numberOfLogs = 4000; // default unless otherwise specified
+    private int numberOfLogs;
 }

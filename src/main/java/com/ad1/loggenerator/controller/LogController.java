@@ -1,5 +1,6 @@
 package com.ad1.loggenerator.controller;
 
+import org.json.simple.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -57,6 +58,13 @@ public class LogController {
     public ResponseEntity<String> stopRequest() {
         streamingService.setContinueStreaming(false);
         return new ResponseEntity<>("Streaming has stopped.", HttpStatus.OK);
+    }
+
+    // test for streaming to addresss
+    @PostMapping("stream/toAddress")
+    public ResponseEntity<String> addressStream(@RequestBody JSONObject streamData){
+        System.out.println(streamData);
+        return new ResponseEntity<>("Data successfully received.", HttpStatus.OK);
     }
 
     // message destination for batch mode

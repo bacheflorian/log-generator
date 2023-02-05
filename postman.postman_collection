@@ -1,22 +1,21 @@
 {
 	"info": {
-		"_postman_id": "1c33cd1d-462d-4f66-90d3-8279415a5de1",
+		"_postman_id": "ea2a5801-2b3d-4ba0-99dc-0f684195e151",
 		"name": "log-generator",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "24627710"
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
 			"name": "stream",
 			"item": [
 				{
-					"name": "valid_repeatedLines",
+					"name": "valid_streamToFile",
 					"request": {
 						"method": "POST",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n  \"repeatingLoglinesPercent\": 0.068,\r\n  \"fieldSettings\": {\r\n    \"includeTimeStamp\": true,\r\n    \"includeProcessingTime\": true,\r\n    \"includeCurrentUserID\": true,\r\n    \"includeBusinessGUID\": false,\r\n    \"includePathToFile\": true,\r\n    \"includeFileSHA256\": true,\r\n    \"includeDisposition\": true\r\n  },\r\n  \"malwareSettings\": {\r\n    \"includeTrojan\": true,\r\n    \"includeAdware\": false,\r\n    \"includeRansom\": false\r\n  },\r\n  \"mode\": \"Stream\",\r\n  \"streamSettings\": {\r\n    \"streamAddress\": \"test\",\r\n    \"saveLogs\": false\r\n  },\r\n  \"batchSettings\": {\r\n    \"numberOfLogs\": 0\r\n  }\r\n}",
+							"raw": "{\r\n  \"repeatingLoglinesPercent\": 0.068,\r\n  \"fieldSettings\": {\r\n    \"includeTimeStamp\": true,\r\n    \"includeProcessingTime\": true,\r\n    \"includeCurrentUserID\": true,\r\n    \"includeBusinessGUID\": false,\r\n    \"includePathToFile\": true,\r\n    \"includeFileSHA256\": true,\r\n    \"includeDisposition\": true\r\n  },\r\n  \"malwareSettings\": {\r\n    \"includeTrojan\": true,\r\n    \"includeAdware\": false,\r\n    \"includeRansom\": false\r\n  },\r\n  \"mode\": \"Stream\",\r\n  \"streamSettings\": {\r\n    \"streamAddress\": \"\",\r\n    \"saveLogs\": false\r\n  },\r\n  \"batchSettings\": {\r\n    \"numberOfLogs\": 0\r\n  }\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -33,7 +32,70 @@
 							"path": [
 								"api",
 								"v1",
-								"generate"
+								"generate",
+								"stream"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "valid_streamToAddress",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"repeatingLoglinesPercent\": 0.20,\r\n  \"fieldSettings\": {\r\n    \"includeTimeStamp\": true,\r\n    \"includeProcessingTime\": true,\r\n    \"includeCurrentUserID\": true,\r\n    \"includeBusinessGUID\": false,\r\n    \"includePathToFile\": true,\r\n    \"includeFileSHA256\": true,\r\n    \"includeDisposition\": true\r\n  },\r\n  \"malwareSettings\": {\r\n    \"includeTrojan\": true,\r\n    \"includeAdware\": false,\r\n    \"includeRansom\": false\r\n  },\r\n  \"mode\": \"Stream\",\r\n  \"streamSettings\": {\r\n    \"streamAddress\": \"http://localhost:8080/api/v1/generate/stream/toAddress\",\r\n    \"saveLogs\": false\r\n  },\r\n  \"batchSettings\": {\r\n    \"numberOfLogs\": 0\r\n  }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/generate/stream",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"generate",
+								"stream"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "invalid_streamToAddress",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"repeatingLoglinesPercent\": 0.20,\r\n  \"fieldSettings\": {\r\n    \"includeTimeStamp\": true,\r\n    \"includeProcessingTime\": true,\r\n    \"includeCurrentUserID\": true,\r\n    \"includeBusinessGUID\": false,\r\n    \"includePathToFile\": true,\r\n    \"includeFileSHA256\": true,\r\n    \"includeDisposition\": true\r\n  },\r\n  \"malwareSettings\": {\r\n    \"includeTrojan\": true,\r\n    \"includeAdware\": false,\r\n    \"includeRansom\": false\r\n  },\r\n  \"mode\": \"Stream\",\r\n  \"streamSettings\": {\r\n    \"streamAddress\": \"http://localhost:8080/api/v1/generated/stream/invalid_toAddress\",\r\n    \"saveLogs\": false\r\n  },\r\n  \"batchSettings\": {\r\n    \"numberOfLogs\": 0\r\n  }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/v1/generate/stream",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"v1",
+								"generate",
+								"stream"
 							]
 						}
 					},
@@ -44,6 +106,10 @@
 					"request": {
 						"method": "POST",
 						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
 						"url": {
 							"raw": "http://localhost:8080/api/v1/generate/stream/stop",
 							"protocol": "http",
@@ -54,6 +120,8 @@
 							"path": [
 								"api",
 								"v1",
+								"generate",
+								"stream",
 								"stop"
 							]
 						}
@@ -66,7 +134,7 @@
 			"name": "batch",
 			"item": [
 				{
-					"name": "valid_repeatedLines",
+					"name": "valid_generateBatchFile",
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -89,7 +157,8 @@
 							"path": [
 								"api",
 								"v1",
-								"generate"
+								"generate",
+								"batch"
 							]
 						}
 					},

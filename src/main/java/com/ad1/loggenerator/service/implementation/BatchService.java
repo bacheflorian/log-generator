@@ -64,27 +64,26 @@ public class BatchService {
             // add log lines to batch file
             for (int i = 0; i < batchSettings.getNumberOfLogs(); i++) { // repeat for specified batch size
                 JSONObject logLine = logService.generateLogLine(selectionModel);
-                for (int j = 0; j < selectionModel.getRepeatingLoglinesPercent() - 1
-                        && i < batchSettings.getNumberOfLogs() - 1; j++, i++) { // repeated for specified number of
-                                                                                // repeated lines size
-                    fileWriter.write(logLine.toString() + "\n");
-                    logLineCount++;
-                    if (logLineCount % sendBatchDataFrequency == 0) {
-                        sendBatchData(jobId, logLineCount, System.currentTimeMillis() / 1000);
-                    }
-                }
                 fileWriter.write(logLine.toString() + "\n");
                 logLineCount++;
                 if (logLineCount % sendBatchDataFrequency == 0) {
                     sendBatchData(jobId, logLineCount, System.currentTimeMillis() / 1000);
                 }
-            }
-            fileWriter.close();
 
-        } catch (IOException e) {
-            throw new FilePathNotFoundException(e.getMessage());
-        }
-        
+                // determine if a log lines repeats
+                if (Math.random() < selectionModel.getRepeatingLoglinesPercent()) {
+                    fileWriter.write(logLine.toString() + "\n");
+                    logLineCount++; i++;
+                    if (logLineCount % sendBatchDataFrequency == 0) {
+                        sendBatchData(jobId, logLineCount, System.currentTimeMillis() / 1000);
+                    }
+                }
+
+            }
+                fileWriter.close();
+            } catch(IOException e){
+                throw new FilePathNotFoundException(e.getMessage());
+            }
     }
 
     /**
