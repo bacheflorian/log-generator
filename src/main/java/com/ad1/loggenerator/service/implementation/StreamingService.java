@@ -1,4 +1,4 @@
-package com.ad1.loggenerator.service;
+package com.ad1.loggenerator.service.implementation;
 
 import java.io.FileWriter;
 import java.io.IOException;

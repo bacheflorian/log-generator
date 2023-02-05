@@ -83,7 +83,7 @@
 							}
 						},
 						"url": {
-							"raw": "http://localhost:8080/api/v1/generate",
+							"raw": "http://localhost:8080/api/v1/generate/stream",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -108,7 +108,7 @@
 							"raw": ""
 						},
 						"url": {
-							"raw": "http://localhost:8080/api/v1/stop",
+							"raw": "http://localhost:8080/api/v1/generate/stream/stop",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -143,7 +143,7 @@
 							}
 						},
 						"url": {
-							"raw": "http://localhost:8080/api/v1/generate",
+							"raw": "http://localhost:8080/api/v1/generate/batch",
 							"protocol": "http",
 							"host": [
 								"localhost"
