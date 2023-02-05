@@ -1,11 +1,19 @@
 import { Box, Button, Text, useBoolean, VStack } from '@chakra-ui/react';
 import { React, useEffect, useState } from 'react';
 
-function Tracking() {
+function Tracking({ jobID, setJobID }) {
   const [isLoading, setIsLoading] = useBoolean(false);
-  const [isRunning, setRunning] = useBoolean(true); //temporary, for demo
+  const [isRunning, setRunning] = useBoolean(false); //temporary, for demo
   const [uptime, setUptime] = useState(0);
   const [logsCreated, setlogsCreated] = useState(0);
+
+  //conenct to socket once there is a new jobID
+  useEffect(() => {
+    if (jobID !== null) {
+      setUptime(0);
+      setRunning.on();
+    }
+  }, [jobID]);
 
   // update uptime if server running
   useEffect(() => {
@@ -43,12 +51,23 @@ function Tracking() {
   const handleCancel = () => {
     setIsLoading.on();
 
-    console.log('cancel'); //temporary, for demo
+    fetch(process.env.REACT_APP_API_URL + 'generate/stream/stop', {
+      method: 'POST',
+    })
+      .then(response => {
+        if (response.ok) {
+          return response.text();
+        }
 
-    setTimeout(() => {
-      setRunning.off();
-      setIsLoading.off(); //temporary, for demo
-    }, 500);
+        throw Error("Couldn't cancel at this time, please try again later");
+      })
+      .then(data => {
+        console.log(data);
+        setRunning.off();
+        setJobID(null);
+      })
+      .catch(err => alert(err))
+      .finally(() => setIsLoading.off());
   };
 
   return (
@@ -62,6 +81,7 @@ function Tracking() {
           colorScheme="red"
           onClick={handleCancel}
           isLoading={isLoading}
+          isDisabled={jobID === null}
         >
           Cancel
         </Button>
