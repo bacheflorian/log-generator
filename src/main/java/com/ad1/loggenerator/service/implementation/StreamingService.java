@@ -4,6 +4,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+
+import java.util.UUID;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Async;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.json.simple.JSONObject;
@@ -12,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
 import com.ad1.loggenerator.exception.FilePathNotFoundException;
+import com.ad1.loggenerator.model.LogMessage;
 import com.ad1.loggenerator.model.SelectionModel;
 
 import lombok.Data;
@@ -28,9 +33,12 @@ public class StreamingService {
 
     private LogService logService;
     private boolean continueStreaming; // starts and stops streaming
+    private SimpMessagingTemplate template;
+    private final int sendStreamDataFrequency = 10000;
 
-    public StreamingService(@Autowired LogService logService) {
+    public StreamingService(@Autowired LogService logService, @Autowired SimpMessagingTemplate template) {
         this.logService = logService;
+        this.template = template;
     }
 
     /**
@@ -40,6 +48,7 @@ public class StreamingService {
      *                       log lines as per the user
      * @return
      */
+    @Async("asyncTaskExecutor")
     public String streamMode(SelectionModel selectionModel) {
 
         // stream to address
@@ -58,7 +67,7 @@ public class StreamingService {
         String streamAddress = selectionModel.getStreamSettings().getStreamAddress();
         WebClient webClient = WebClient.create(streamAddress);
         String[] errorMessage = {""};
-
+        
         while (isContinueStreaming()) {
             JSONObject logLine = logService.generateLogLine(selectionModel);
 
@@ -104,6 +113,9 @@ public class StreamingService {
 
     public String streamToFile(SelectionModel selectionModel) {
 
+        String jobId = selectionModel.getJobId();
+        int logLineCount = 0;
+            
         // create currentTimeDate as a String to append to filepath
         LocalDateTime currentDateTime = LocalDateTime.now();
         DateTimeFormatter formatDateTime = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
@@ -122,7 +134,18 @@ public class StreamingService {
                 // determine if a log lines repeats
                 if (Math.random() < selectionModel.getRepeatingLoglinesPercent()) {
                     fileWriter.write(logLine.toString() + "\n");
+                    logLineCount++;
+                    if (logLineCount % sendStreamDataFrequency == 0) {
+                        sendStreamData(jobId, logLineCount, System.currentTimeMillis() / 1000);
+                    }
                 }
+                
+                fileWriter.write(logLine.toString() + "\n");
+                logLineCount++;
+                if (logLineCount % sendStreamDataFrequency == 0) {
+                    sendStreamData(jobId, logLineCount, System.currentTimeMillis() / 1000);
+                }
+
             }
             fileWriter.close();
             return "Successfully generated stream file";
@@ -132,4 +155,16 @@ public class StreamingService {
         }
     }
 
+    /**
+     * Sends log data for a stream job to the specified jobId
+     */
+    public void sendStreamData(String jobId, int logLineCount, long timeStamp) {
+        String destination = "/topic/stream/" + jobId;
+        LogMessage message = new LogMessage(logLineCount, timeStamp);
+        template.convertAndSend(destination, message);
+    }
+
+    public String generateJobId() {
+        return UUID.randomUUID().toString();
+    }
 }

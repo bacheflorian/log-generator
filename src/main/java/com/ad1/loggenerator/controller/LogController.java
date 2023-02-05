@@ -46,8 +46,11 @@ public class LogController {
     @PostMapping("/stream")
     public ResponseEntity<String> generateStreamRequest(@RequestBody SelectionModel selectionModel) {
         if (selectionModel.getMode().equals("Stream")) {
+            String jobId = streamingService.generateJobId();
+            selectionModel.setJobId(jobId);
             streamingService.setContinueStreaming(true);
-            return new ResponseEntity<>(streamingService.streamMode(selectionModel), HttpStatus.OK);
+            streamingService.streamMode(selectionModel);
+            return new ResponseEntity<>(jobId, HttpStatus.OK);
         } else {
             return new ResponseEntity<>("Invalid Request. Try again", HttpStatus.BAD_REQUEST);
         }
@@ -60,18 +63,18 @@ public class LogController {
         return new ResponseEntity<>("Streaming has stopped.", HttpStatus.OK);
     }
 
+    // // message destination for batch mode
+    // @MessageMapping("/batch/{clientId}")
+    // @SendTo("/topic/batch/{clientId}")
+    // public LogMessage sendBatchData(LogMessage logMessage, @DestinationVariable int clientId) {
+    //     return logMessage;
+    // }
+    
     // test for streaming to addresss
     @PostMapping("stream/toAddress")
     public ResponseEntity<String> addressStream(@RequestBody JSONObject streamData){
         System.out.println(streamData);
         return new ResponseEntity<>("Data successfully received.", HttpStatus.OK);
-    }
-
-    // message destination for batch mode
-    @MessageMapping("/batch/{clientId}")
-    @SendTo("/topic/batch/{clientId}")
-    public LogMessage sendBatchData(LogMessage logMessage, @DestinationVariable int clientId) {
-        return logMessage;
     }
 
 }
