@@ -1,32 +1,68 @@
 import { Box, Button, Text, useBoolean, VStack } from '@chakra-ui/react';
-import { React, useEffect, useState } from 'react';
+import { Stomp } from '@stomp/stompjs';
+import { React, useEffect, useRef, useState } from 'react';
+import SockJS from 'sockjs-client';
 
 function Tracking({ jobID, setJobID }) {
   const [isLoading, setIsLoading] = useBoolean(false);
   const [isRunning, setRunning] = useBoolean(false); //temporary, for demo
   const [uptime, setUptime] = useState(0);
   const [logsCreated, setlogsCreated] = useState(0);
+  const lastResponseRef = useRef(null);
+
+  useEffect(() => {}, []);
 
   //conenct to socket once there is a new jobID
   useEffect(() => {
-    if (jobID !== null) {
-      setUptime(0);
-      setRunning.on();
+    if (jobID === null) {
+      return;
     }
-  }, [jobID]);
 
-  // update uptime if server running
+    let stompClient = Stomp.over(
+      () => new SockJS('http://localhost:8080/websocket-batch-service')
+    );
+    stompClient.debug = () => {}; //disables stomp debug console logs
+    stompClient.connect({}, function (frame) {
+      stompClient.subscribe('/topic/batch/' + jobID, function (response) {
+        response = JSON.parse(response.body);
+        console.log(response);
+        setlogsCreated(response.logLineCount);
+        lastResponseRef.current = Date.now();
+      });
+    });
+
+    setUptime(0);
+    setlogsCreated(0);
+    lastResponseRef.current = Date.now();
+    setRunning.on();
+
+    return () => stompClient.deactivate();
+  }, [jobID, setRunning]);
+
+  // uptime and active intervals while job is running
   useEffect(() => {
-    let interval;
+    let timerInterval;
+    let activeInterval;
     if (isRunning) {
-      interval = setInterval(() => {
+      timerInterval = setInterval(() => {
         setUptime(prevTime => prevTime + 1);
       }, 1000);
+
+      activeInterval = setInterval(() => {
+        if (Number(Date.now() - lastResponseRef.current) > 2500) {
+          setRunning.off();
+          setJobID(null);
+        }
+      }, 1000);
     } else if (!isRunning) {
-      clearInterval(interval);
+      clearInterval(timerInterval);
+      clearInterval(activeInterval);
     }
-    return () => clearInterval(interval);
-  }, [isRunning]);
+    return () => {
+      clearInterval(timerInterval);
+      clearInterval(activeInterval);
+    };
+  }, [isRunning, setRunning, setJobID]);
 
   // converts seconds to a custom time string
   const secondsToTimeString = totalSeconds => {

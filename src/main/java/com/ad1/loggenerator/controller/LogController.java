@@ -5,7 +5,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.ad1.loggenerator.model.BatchTracker;
 import com.ad1.loggenerator.model.ContinueMessage;
@@ -24,6 +30,7 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 @RestController
 @RequestMapping("/api/v1/generate")
+@CrossOrigin("http://localhost:3000/")
 public class LogController {
 
     private final BatchService batchService;
@@ -34,14 +41,13 @@ public class LogController {
     // general request for generating batch files or streaming
     @PostMapping("/batch")
     public ResponseEntity<String> generateBatchRequest(
-        @RequestBody SelectionModel selectionModel) throws InterruptedException {
+            @RequestBody SelectionModel selectionModel) throws InterruptedException {
 
         if (selectionModel.getMode().equals("Batch")) {
             String jobId = batchService.generateJobId();
             selectionModel.setJobId(jobId);
-            BatchTracker batchJobTracker = new BatchTracker(jobId, 0, 
-                selectionModel.getBatchSettings().getNumberOfLogs()
-                );
+            BatchTracker batchJobTracker = new BatchTracker(jobId, 0,
+                    selectionModel.getBatchSettings().getNumberOfLogs());
             batchService.batchMode(selectionModel, batchJobTracker);
             batchServiceTracker.addNewJob(batchJobTracker);
             if (batchServiceTracker.getJobsListSize() == 1) {
@@ -55,14 +61,13 @@ public class LogController {
 
     @PostMapping("/stream")
     public ResponseEntity<String> generateStreamRequest(
-        @RequestBody SelectionModel selectionModel) throws InterruptedException {
+            @RequestBody SelectionModel selectionModel) throws InterruptedException {
 
         if (selectionModel.getMode().equals("Stream")) {
             String jobId = streamingService.generateJobId();
             selectionModel.setJobId(jobId);
-            StreamTracker streamJobTracker = new StreamTracker(jobId, 0, 
-                System.currentTimeMillis()/1000, true
-                );
+            StreamTracker streamJobTracker = new StreamTracker(jobId, 0,
+                    System.currentTimeMillis() / 1000, true);
             streamingService.streamMode(selectionModel, streamJobTracker);
             streamServiceTracker.addNewJob(streamJobTracker);
             if (streamServiceTracker.getJobsListSize() == 1) {
@@ -100,6 +105,7 @@ public class LogController {
 
     /**
      * Method to continue a streaming job via socket
+     * 
      * @param jobId the id of the streaming job to continue
      * @return ContinueMessage with success or failure message
      */
@@ -113,16 +119,17 @@ public class LogController {
             return new ContinueMessage(jobId, "No stream job with that id.");
         }
     }
-    
+
     // test for streaming to addresss
     @PostMapping("stream/toAddress")
-    public ResponseEntity<String> addressStream(@RequestBody JSONObject streamData){
+    public ResponseEntity<String> addressStream(@RequestBody JSONObject streamData) {
         System.out.println(streamData);
         return new ResponseEntity<>("Data successfully received.", HttpStatus.OK);
     }
 
     /**
      * Method to keep track of number of active batch services
+     * 
      * @return
      */
     @GetMapping("batch/number")
@@ -133,6 +140,7 @@ public class LogController {
 
     /**
      * Method to keep track of the number of running stream services
+     * 
      * @return
      */
     @GetMapping("stream/number")
