@@ -1,5 +1,6 @@
 package com.ad1.loggenerator.controller;
 
+import org.json.simple.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -68,5 +69,12 @@ public class LogController {
     // public LogMessage sendBatchData(LogMessage logMessage, @DestinationVariable int clientId) {
     //     return logMessage;
     // }
+    
+    // test for streaming to addresss
+    @PostMapping("stream/toAddress")
+    public ResponseEntity<String> addressStream(@RequestBody JSONObject streamData){
+        System.out.println(streamData);
+        return new ResponseEntity<>("Data successfully received.", HttpStatus.OK);
+    }
 
 }
