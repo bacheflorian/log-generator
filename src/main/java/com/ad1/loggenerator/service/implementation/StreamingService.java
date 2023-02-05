@@ -4,12 +4,16 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.UUID;
 
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.ad1.loggenerator.exception.FilePathNotFoundException;
+import com.ad1.loggenerator.model.LogMessage;
 import com.ad1.loggenerator.model.SelectionModel;
 
 import lombok.Data;
@@ -24,9 +28,12 @@ public class StreamingService {
 
     private LogService logService;
     private boolean continueStreaming; // starts and stops streaming
+    private SimpMessagingTemplate template;
+    private final int sendStreamDataFrequency = 10000;
 
-    public StreamingService(@Autowired LogService logService) {
+    public StreamingService(@Autowired LogService logService, @Autowired SimpMessagingTemplate template) {
         this.logService = logService;
+        this.template = template;
     }
 
     /**
@@ -36,10 +43,14 @@ public class StreamingService {
      *                       log lines as per the user
      * @return
      */
-    public String streamMode(SelectionModel selectionModel) {
+    @Async("asyncTaskExecutor")
+    public void streamMode(SelectionModel selectionModel) {
         try {
             // include logic here to swap between streaming to location vs file as per
             // selectionModel parameters
+
+            String jobId = selectionModel.getJobId();
+            int logLineCount = 0;
 
             // create currentTimeDate as a String to append to filepath
             LocalDateTime currentDateTime = LocalDateTime.now();
@@ -56,15 +67,34 @@ public class StreamingService {
                                                                                              // number of repeated lines
                                                                                              // size
                     fileWriter.write(logLine.toString() + "\n");
+                    logLineCount++;
+                    if (logLineCount % sendStreamDataFrequency == 0) {
+                        sendStreamData(jobId, logLineCount, System.currentTimeMillis() / 1000);
+                    }
                 }
                 fileWriter.write(logLine.toString() + "\n");
+                logLineCount++;
+                if (logLineCount % sendStreamDataFrequency == 0) {
+                    sendStreamData(jobId, logLineCount, System.currentTimeMillis() / 1000);
+                }
             }
             fileWriter.close();
 
         } catch (IOException e) {
             throw new FilePathNotFoundException(e.getMessage());
         }
-        return "Successfully generated stream file";
     }
 
+    /**
+     * Sends log data for a stream job to the specified jobId
+     */
+    public void sendStreamData(String jobId, int logLineCount, long timeStamp) {
+        String destination = "/topic/stream/" + jobId;
+        LogMessage message = new LogMessage(logLineCount, timeStamp);
+        template.convertAndSend(destination, message);
+    }
+
+    public String generateJobId() {
+        return UUID.randomUUID().toString();
+    }
 }
