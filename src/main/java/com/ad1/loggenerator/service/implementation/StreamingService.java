@@ -8,7 +8,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Async;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,8 +15,8 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
 import com.ad1.loggenerator.exception.FilePathNotFoundException;
-import com.ad1.loggenerator.model.LogMessage;
 import com.ad1.loggenerator.model.SelectionModel;
+import com.ad1.loggenerator.model.StreamTracker;
 
 import lombok.Data;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -32,13 +31,9 @@ import reactor.core.publisher.Mono;
 public class StreamingService {
 
     private LogService logService;
-    private boolean continueStreaming; // starts and stops streaming
-    private SimpMessagingTemplate template;
-    private final int sendStreamDataFrequency = 10000;
 
-    public StreamingService(@Autowired LogService logService, @Autowired SimpMessagingTemplate template) {
+    public StreamingService(@Autowired LogService logService) {
         this.logService = logService;
-        this.template = template;
     }
 
     /**
@@ -49,26 +44,26 @@ public class StreamingService {
      * @return
      */
     @Async("asyncTaskExecutor")
-    public String streamMode(SelectionModel selectionModel) {
+    public void streamMode(SelectionModel selectionModel, StreamTracker streamJobTracker) {
 
         // stream to address
         if (!selectionModel.getStreamSettings().getStreamAddress().isEmpty()) {
-            return streamToAddress(selectionModel);
+            streamToAddress(selectionModel, streamJobTracker);
         }
         // stream to file
         else {
-            return streamToFile(selectionModel);
+            streamToFile(selectionModel, streamJobTracker);
         }
     }
 
-    public String streamToAddress(SelectionModel selectionModel) {
+    public String streamToAddress(SelectionModel selectionModel, StreamTracker streamJobTracker) {
 
         // Setup web client for post request to user specified address
         String streamAddress = selectionModel.getStreamSettings().getStreamAddress();
         WebClient webClient = WebClient.create(streamAddress);
         String[] errorMessage = {""};
         
-        while (isContinueStreaming()) {
+        while (streamJobTracker.getContinueStreaming()) {
             JSONObject logLine = logService.generateLogLine(selectionModel);
 
             // set up post request
@@ -84,13 +79,13 @@ public class StreamingService {
 //                            System.out.println("Successful response: " + res);
                     },
                     error -> {
-                        setContinueStreaming(false);
+                        streamJobTracker.setContinueStreaming(false);
                         errorMessage[0] = "Error while making the request: " + error;
                     }
             );
 
             // determine if a log lines repeats
-            if (Math.random() < selectionModel.getRepeatingLoglinesPercent() && isContinueStreaming()) {
+            if (Math.random() < selectionModel.getRepeatingLoglinesPercent() && streamJobTracker.getContinueStreaming()) {
 
                 // initiate duplicate post request and receive response from address
                 response.subscribe(
@@ -98,7 +93,7 @@ public class StreamingService {
 //                            System.out.println("Successful response: " + res);
                         },
                         error -> {
-                            setContinueStreaming(false);
+                            streamJobTracker.setContinueStreaming(false);
                             errorMessage[0] = "Error while making the request: " + error;
                         }
                 );
@@ -111,57 +106,41 @@ public class StreamingService {
         return "Successfully streamed to address.";
     }
 
-    public String streamToFile(SelectionModel selectionModel) {
+    public void streamToFile(SelectionModel selectionModel, StreamTracker streamJobTracker) {
 
-        String jobId = selectionModel.getJobId();
-        int logLineCount = 0;
             
         // create currentTimeDate as a String to append to filepath
         LocalDateTime currentDateTime = LocalDateTime.now();
         DateTimeFormatter formatDateTime = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
         String timestamp = currentDateTime.format(formatDateTime);
 
+        // reset the start time of the stream
+        streamJobTracker.setLastPing(System.currentTimeMillis()/1000);
+
         // specify filepath location for stream file
         String filename = "C:\\log-generator\\stream\\" + timestamp + ".json";
 
         try {
             FileWriter fileWriter = new FileWriter(filename);
-
-            while (isContinueStreaming()) {
+            while (streamJobTracker.getContinueStreaming()) {
+                
                 JSONObject logLine = logService.generateLogLine(selectionModel);
                 fileWriter.write(logLine.toString() + "\n");
 
                 // determine if a log lines repeats
                 if (Math.random() < selectionModel.getRepeatingLoglinesPercent()) {
                     fileWriter.write(logLine.toString() + "\n");
-                    logLineCount++;
-                    if (logLineCount % sendStreamDataFrequency == 0) {
-                        sendStreamData(jobId, logLineCount, System.currentTimeMillis() / 1000);
-                    }
+                    streamJobTracker.setLogCount(streamJobTracker.getLogCount() + 1);
                 }
                 
                 fileWriter.write(logLine.toString() + "\n");
-                logLineCount++;
-                if (logLineCount % sendStreamDataFrequency == 0) {
-                    sendStreamData(jobId, logLineCount, System.currentTimeMillis() / 1000);
-                }
-
+                streamJobTracker.setLogCount(streamJobTracker.getLogCount() + 1);
             }
             fileWriter.close();
-            return "Successfully generated stream file";
 
         } catch (IOException e) {
             throw new FilePathNotFoundException(e.getMessage());
         }
-    }
-
-    /**
-     * Sends log data for a stream job to the specified jobId
-     */
-    public void sendStreamData(String jobId, int logLineCount, long timeStamp) {
-        String destination = "/topic/stream/" + jobId;
-        LogMessage message = new LogMessage(logLineCount, timeStamp);
-        template.convertAndSend(destination, message);
     }
 
     public String generateJobId() {
