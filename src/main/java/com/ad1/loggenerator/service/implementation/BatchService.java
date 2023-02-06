@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import com.ad1.loggenerator.exception.FilePathNotFoundException;
 import com.ad1.loggenerator.model.BatchSettings;
+import com.ad1.loggenerator.model.BatchTracker;
 import com.ad1.loggenerator.model.LogMessage;
 import com.ad1.loggenerator.model.SelectionModel;
 
@@ -27,12 +28,9 @@ import lombok.Data;
 @Service
 public class BatchService {
 
-    private SimpMessagingTemplate template;
     private LogService logService;
-    private final int sendBatchDataFrequency = 10000;
 
-    public BatchService(@Autowired SimpMessagingTemplate template, @Autowired LogService logService) {
-        this.template = template;
+    public BatchService(@Autowired LogService logService) {
         this.logService = logService;
     }
 
@@ -44,13 +42,10 @@ public class BatchService {
      * @return
      */
     @Async("asyncTaskExecutor")
-    public void batchMode(SelectionModel selectionModel) {
+    public void batchMode(SelectionModel selectionModel, BatchTracker batchJobTracker) {
         try {
             // batch settings
             BatchSettings batchSettings = selectionModel.getBatchSettings();
-
-            String jobId = selectionModel.getJobId();
-            int logLineCount = 0;
 
             // create currentTimeDate as a String to append to filepath
             LocalDateTime currentDateTime = LocalDateTime.now();
@@ -65,18 +60,13 @@ public class BatchService {
             for (int i = 0; i < batchSettings.getNumberOfLogs(); i++) { // repeat for specified batch size
                 JSONObject logLine = logService.generateLogLine(selectionModel);
                 fileWriter.write(logLine.toString() + "\n");
-                logLineCount++;
-                if (logLineCount % sendBatchDataFrequency == 0) {
-                    sendBatchData(jobId, logLineCount, System.currentTimeMillis() / 1000);
-                }
+                batchJobTracker.setLogCount(batchJobTracker.getLogCount() + 1);
 
                 // determine if a log lines repeats
                 if (Math.random() < selectionModel.getRepeatingLoglinesPercent()) {
                     fileWriter.write(logLine.toString() + "\n");
-                    logLineCount++; i++;
-                    if (logLineCount % sendBatchDataFrequency == 0) {
-                        sendBatchData(jobId, logLineCount, System.currentTimeMillis() / 1000);
-                    }
+                    i++;
+                    batchJobTracker.setLogCount(batchJobTracker.getLogCount() + 1);
                 }
 
             }
@@ -84,15 +74,6 @@ public class BatchService {
             } catch(IOException e){
                 throw new FilePathNotFoundException(e.getMessage());
             }
-    }
-
-    /**
-     * Sends log data for a batch job to the specified clientId
-     */
-    public void sendBatchData(String jobId, int logLineCount, long timeStamp) {
-        String destination = "/topic/batch/" + jobId;
-        LogMessage message = new LogMessage(logLineCount, timeStamp);
-        template.convertAndSend(destination, message);
     }
 
     public String generateJobId() {
