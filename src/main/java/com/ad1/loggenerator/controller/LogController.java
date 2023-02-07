@@ -3,11 +3,7 @@ package com.ad1.loggenerator.controller;
 import org.json.simple.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.ad1.loggenerator.model.BatchTracker;
 import com.ad1.loggenerator.model.SelectionModel;
@@ -105,6 +101,26 @@ public class LogController {
     public ResponseEntity<String> addressStream(@RequestBody JSONObject streamData){
         System.out.println(streamData);
         return new ResponseEntity<>("Data successfully received.", HttpStatus.OK);
+    }
+
+    /**
+     * Method to keep track of number of active batch services
+     * @return
+     */
+    @GetMapping("batch/number")
+    public ResponseEntity<Integer> numberOfRunningBatchService() {
+        int batchTracker = batchServiceTracker.getJobsListSize();
+        return new ResponseEntity<>(batchTracker, HttpStatus.OK);
+    }
+
+    /**
+     * Method to keep track of the number of running stream services
+     * @return
+     */
+    @GetMapping("stream/number")
+    public ResponseEntity<Integer> numberOfRunningStreamService() {
+        int streamTracker = streamServiceTracker.getJobsListSize();
+        return new ResponseEntity<>(streamTracker, HttpStatus.OK);
     }
 
 }
