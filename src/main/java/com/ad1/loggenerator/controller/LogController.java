@@ -64,7 +64,6 @@ public class LogController {
             streamServiceTracker.addNewJob(streamJobTracker);
             if (streamServiceTracker.getJobsListSize() == 1) {
                 streamServiceTracker.checkLastPings();
-                streamServiceTracker.sendStreamData();
             }
             return new ResponseEntity<>(jobId, HttpStatus.OK);
         } else {
