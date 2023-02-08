@@ -24,7 +24,11 @@ public class StreamServiceTracker {
     /**
      * Seconds before timing out a stream job
      */
-    private final long secondsTimeOut = 5;
+    private final long secondsTimeOut = 60;
+    /**
+     * Milliseconds to wait between sending data to frontend
+     */
+    private final long millsecondsPerMessage = 1000;
     @Autowired
     private SimpMessagingTemplate template;
     /**
@@ -33,9 +37,9 @@ public class StreamServiceTracker {
     private Map<String, StreamTracker> jobsList = new ConcurrentHashMap<String, StreamTracker>();
 
     /**
-     * Checks every stream job and sets continueStreaming to false
-     * if lastPing+5s < current time. Then removes all stream jobs
-     * with continueStreaming set to false
+     * Sends stream data to the front end, checks every stream job 
+     * and sets continueStreaming to false if lastPing+5s < current time. 
+     * Then removes all stream jobs with continueStreaming set to false
      */
     @Async("asyncTaskExecutor")
     public void checkLastPings() throws InterruptedException {
@@ -45,19 +49,18 @@ public class StreamServiceTracker {
         }
 
         while (jobsList.size() > 0) {
-            Thread.sleep(1000);
+            Thread.sleep(millsecondsPerMessage);
 
             for (String jobId : jobsList.keySet()) {
                 StreamTracker job = jobsList.get(jobId);
+
+                sendStreamData(job);
+
                 if (job.getLastPing() + secondsTimeOut < System.currentTimeMillis() / 1000) {
                     job.setContinueStreaming(false);
                 }
-            }
 
-            for (String jobId : jobsList.keySet()) {
-                StreamTracker job = jobsList.get(jobId);
-
-                if (!job.getContinueStreaming()) {
+                if(!job.getContinueStreaming()) {
                     jobsList.remove(jobId);
                 }
             }
@@ -66,36 +69,24 @@ public class StreamServiceTracker {
     }
 
     /**
-     * Sends log data for every stream job in the jobs list
+     * Sends log data for a stream job
      * @throws InterruptedException
      */
-    @Async("asyncTaskExecutor")
-    public void sendStreamData() throws InterruptedException {
+    public void sendStreamData(StreamTracker job) throws InterruptedException {
 
         if (jobsList.size() == 0) {
             return;
         }
 
-        StreamTracker job = null;
         String destination = "/topic/stream";
         LogMessage message = new LogMessage();
 
-        while (jobsList.size() > 0) {
+        if (job != null) {
+            message.setLogLineCount(job.getLogCount());
+            message.setTimeStamp(System.currentTimeMillis()/1000);
 
-            Thread.sleep(1000);
-            
-            for (String jobId: jobsList.keySet()) {
-                job = jobsList.get(jobId);
-
-                if (job != null) {
-                    message.setLogLineCount(job.getLogCount());
-                    message.setTimeStamp(System.currentTimeMillis()/1000);
-    
-                    template.convertAndSend(destination + "/" + jobId, message);
-                }
-            }
+            template.convertAndSend(destination + "/" + job.getJobId(), message);
         }
-
     }
 
     /**
