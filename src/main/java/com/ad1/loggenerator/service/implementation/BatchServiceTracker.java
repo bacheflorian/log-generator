@@ -77,5 +77,4 @@ public class BatchServiceTracker {
     public int getJobsListSize() {
         return jobsList.size();
     }
-
 }
