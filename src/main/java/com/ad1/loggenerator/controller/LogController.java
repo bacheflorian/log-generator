@@ -3,9 +3,12 @@ package com.ad1.loggenerator.controller;
 import org.json.simple.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.web.bind.annotation.*;
 
 import com.ad1.loggenerator.model.BatchTracker;
+import com.ad1.loggenerator.model.ContinueMessage;
 import com.ad1.loggenerator.model.SelectionModel;
 import com.ad1.loggenerator.model.StreamTracker;
 import com.ad1.loggenerator.service.implementation.BatchService;
@@ -64,7 +67,6 @@ public class LogController {
             streamServiceTracker.addNewJob(streamJobTracker);
             if (streamServiceTracker.getJobsListSize() == 1) {
                 streamServiceTracker.checkLastPings();
-                streamServiceTracker.sendStreamData();
             }
             return new ResponseEntity<>(jobId, HttpStatus.OK);
         } else {
@@ -84,7 +86,7 @@ public class LogController {
         }
     }
 
-    // continue streaming request
+    // continue streaming request via HTTP request
     @PostMapping("/stream/continue/{jobId}")
     public ResponseEntity<String> continueRequest(@PathVariable String jobId) {
         boolean result = streamServiceTracker.continueStreamJob(jobId);
@@ -93,6 +95,22 @@ public class LogController {
             return new ResponseEntity<>("Streaming will continue.", HttpStatus.OK);
         } else {
             return new ResponseEntity<>("No stream job with that id.", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * Method to continue a streaming job via socket
+     * @param jobId the id of the streaming job to continue
+     * @return ContinueMessage with success or failure message
+     */
+    @MessageMapping("/stream/continue/{jobId}")
+    public ContinueMessage continueRequestSocket(@DestinationVariable String jobId) {
+        boolean result = streamServiceTracker.continueStreamJob(jobId);
+
+        if (result) {
+            return new ContinueMessage(jobId, "Streaming will continue.");
+        } else {
+            return new ContinueMessage(jobId, "No stream job with that id.");
         }
     }
     

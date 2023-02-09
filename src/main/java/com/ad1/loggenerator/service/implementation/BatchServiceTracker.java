@@ -20,6 +20,10 @@ import lombok.Data;
 @Service
 public class BatchServiceTracker {
     
+    /**
+     * Milliseconds to wait between sending data to frontend
+     */
+    private final long millsecondsPerMessage = 1000;
     @Autowired
     private SimpMessagingTemplate template;
     /**
@@ -42,7 +46,7 @@ public class BatchServiceTracker {
         LogMessage message = new LogMessage();
 
         while (jobsList.size() > 0) {
-            Thread.sleep(1000);
+            Thread.sleep(millsecondsPerMessage);
             
             for (String jobId : jobsList.keySet()) {
                 job = jobsList.get(jobId);
@@ -50,10 +54,6 @@ public class BatchServiceTracker {
                 message.setLogLineCount(job.getLogCount());
                 message.setTimeStamp(System.currentTimeMillis() / 1000);
                 template.convertAndSend(destination + "/" + jobId, message);
-            }
-
-            for (String jobId : jobsList.keySet()) {
-                job = jobsList.get(jobId);
 
                 if (job.getLogCount() >= job.getBatchSize()) {
                     jobsList.remove(jobId);
