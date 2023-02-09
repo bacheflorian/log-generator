@@ -25,7 +25,7 @@ function Settings({ jobID, setJobID }) {
     if (
       isNaN(values.repeatingLoglinesPercent) ||
       Number(values.repeatingLoglinesPercent) < 0 ||
-      Number(values.repeatingLoglinesPercent) > 100
+      Number(values.repeatingLoglinesPercent) > 1
     ) {
       errors.repeatingLoglinesPercent = 'Must be between 0% and 100%';
     }
@@ -87,9 +87,6 @@ function Settings({ jobID, setJobID }) {
       }}
       validate={validate}
       onSubmit={(values, actions) => {
-        //change repeatingLoglinesPercent to a decimal
-        values.repeatingLoglinesPercent = values.repeatingLoglinesPercent / 100;
-
         // round numberOfLogs to nearest integer
         values.batchSettings.numberOfLogs = Math.round(
           values.batchSettings.numberOfLogs
@@ -122,8 +119,8 @@ function Settings({ jobID, setJobID }) {
             console.log(data);
             setJobID(data);
           })
-          .catch(err => alert(err));
-        //.finally(() => actions.setSubmitting(false));
+          .catch(err => alert(err))
+          .finally(() => actions.setSubmitting(false));
       }}
     >
       {props => (
@@ -137,7 +134,9 @@ function Settings({ jobID, setJobID }) {
                     <NumberInput
                       min={0}
                       max={100}
-                      onChange={val => form.setFieldValue(field.name, val)}
+                      onChange={val =>
+                        form.setFieldValue(field.name, val / 100)
+                      }
                     >
                       <NumberInputField placeholder="0" />
                       <InputRightElement
@@ -290,7 +289,7 @@ function Settings({ jobID, setJobID }) {
             <Button
               mt={4}
               colorScheme="teal"
-              isLoading={jobID !== null}
+              isLoading={jobID !== null || props.isSubmitting}
               type="submit"
             >
               Start

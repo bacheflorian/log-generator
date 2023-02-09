@@ -23,7 +23,7 @@ function Tracking({ jobID, setJobID }) {
     );
     stompClient.debug = () => {}; //disables stomp debug console logs
     stompClient.connect({}, function (frame) {
-      stompClient.subscribe('/topic/batch/' + jobID, function (response) {
+      stompClient.subscribe('/topic/job/' + jobID, function (response) {
         response = JSON.parse(response.body);
         console.log(response);
         setlogsCreated(response.logLineCount);
@@ -87,7 +87,7 @@ function Tracking({ jobID, setJobID }) {
   const handleCancel = () => {
     setIsLoading.on();
 
-    fetch(process.env.REACT_APP_API_URL + 'generate/stream/stop', {
+    fetch(process.env.REACT_APP_API_URL + 'generate/stream/stop/' + jobID, {
       method: 'POST',
     })
       .then(response => {
