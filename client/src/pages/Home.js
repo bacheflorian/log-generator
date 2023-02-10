@@ -11,7 +11,7 @@ function Home() {
       <Flex
         justify="space-between"
         alignItems="start"
-        p="2em 10% 0 20%"
+        p="2em 7% 0 20%"
         wrap="wrap"
         rowGap="3em"
       >
@@ -21,7 +21,7 @@ function Home() {
           </Heading>
           <Settings jobID={jobID} setJobID={setJobID} />
         </Box>
-        <Box maxW="50em" minW="25em">
+        <Box maxW="50em" minW="30em">
           <Heading as="h4" size="sm" ml="-1em" pb="1.5em">
             Status
           </Heading>
