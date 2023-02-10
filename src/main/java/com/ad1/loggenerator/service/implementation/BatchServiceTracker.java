@@ -19,7 +19,7 @@ import lombok.Data;
 @Data
 @Service
 public class BatchServiceTracker {
-    
+
     /**
      * Milliseconds to wait between sending data to frontend
      */
@@ -42,12 +42,12 @@ public class BatchServiceTracker {
         }
 
         BatchTracker job = null;
-        String destination = "/topic/batch";
+        String destination = "/topic/job";
         LogMessage message = new LogMessage();
 
         while (jobsList.size() > 0) {
             Thread.sleep(millsecondsPerMessage);
-            
+
             for (String jobId : jobsList.keySet()) {
                 job = jobsList.get(jobId);
 
@@ -64,14 +64,16 @@ public class BatchServiceTracker {
 
     /**
      * Add a new batch job to the jobs list
+     * 
      * @param batchTracker the new batch job tracker
      */
     public void addNewJob(BatchTracker batchTracker) {
         jobsList.put(batchTracker.getJobId(), batchTracker);
     }
-    
+
     /**
      * Return the number of batch jobs
+     * 
      * @return the number of batch jobs
      */
     public int getJobsListSize() {

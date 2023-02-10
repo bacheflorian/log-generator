@@ -17,7 +17,7 @@ import {
 import { Field, Form, Formik } from 'formik';
 import React from 'react';
 
-function Settings() {
+function Settings({ jobID, setJobID }) {
   const validate = values => {
     const errors = {};
 
@@ -25,7 +25,7 @@ function Settings() {
     if (
       isNaN(values.repeatingLoglinesPercent) ||
       Number(values.repeatingLoglinesPercent) < 0 ||
-      Number(values.repeatingLoglinesPercent) > 100
+      Number(values.repeatingLoglinesPercent) > 1
     ) {
       errors.repeatingLoglinesPercent = 'Must be between 0% and 100%';
     }
@@ -87,20 +87,40 @@ function Settings() {
       }}
       validate={validate}
       onSubmit={(values, actions) => {
-        //change repeatingLoglinesPercent to a decimal
-        values.repeatingLoglinesPercent = values.repeatingLoglinesPercent / 100;
-
         // round numberOfLogs to nearest integer
         values.batchSettings.numberOfLogs = Math.round(
           values.batchSettings.numberOfLogs
         );
 
-        // display json output
-        setTimeout(() => {
-          console.log(JSON.stringify(values, null, 2));
-          alert(JSON.stringify(values, null, 2));
-          actions.setSubmitting(false);
-        }, 1000);
+        let address = process.env.REACT_APP_API_URL + 'generate/';
+        if (values.mode === 'Batch') {
+          address = address + 'batch';
+        } else {
+          address = address + 'stream';
+        }
+
+        //alert(JSON.stringify(values, null, 2));
+        console.log(JSON.stringify(values, null, 2));
+        const requestOptions = {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(values),
+        };
+
+        fetch(address, requestOptions)
+          .then(response => {
+            if (response.ok) {
+              return response.text();
+            }
+
+            throw Error("Couldn't submit at this time, please try again later");
+          })
+          .then(data => {
+            console.log(data);
+            setJobID(data);
+          })
+          .catch(err => alert(err))
+          .finally(() => actions.setSubmitting(false));
       }}
     >
       {props => (
@@ -114,7 +134,9 @@ function Settings() {
                     <NumberInput
                       min={0}
                       max={100}
-                      onChange={val => form.setFieldValue(field.name, val)}
+                      onChange={val =>
+                        form.setFieldValue(field.name, val / 100)
+                      }
                     >
                       <NumberInputField placeholder="0" />
                       <InputRightElement
@@ -267,7 +289,7 @@ function Settings() {
             <Button
               mt={4}
               colorScheme="teal"
-              isLoading={props.isSubmitting}
+              isLoading={jobID !== null || props.isSubmitting}
               type="submit"
             >
               Start
