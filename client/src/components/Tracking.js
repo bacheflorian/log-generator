@@ -31,8 +31,8 @@ const secondsToTimeString = totalSeconds => {
 };
 
 function Tracking({ jobID, setJobID }) {
-  const [isLoading, setIsLoading] = useBoolean(false);
-  const [isRunning, setRunning] = useBoolean(false);
+  const [loading, setLoading] = useBoolean(false);
+  const [running, setRunning] = useBoolean(false);
   const [uptime, setUptime] = useState(0);
   const [data, setData] = useState({
     timeStamp: [],
@@ -41,6 +41,7 @@ function Tracking({ jobID, setJobID }) {
   const [logsCreated, setlogsCreated] = useState(0);
   const lastResponseRef = useRef({ time: 0, response: null });
   const { colorMode } = useColorMode();
+  const [showChart, setShowChart] = useBoolean(false);
 
   //conenct to socket once there is a new jobID
   useEffect(() => {
@@ -48,23 +49,41 @@ function Tracking({ jobID, setJobID }) {
       return;
     }
 
+    // reset values on new jobID
+    setUptime(0);
+    setlogsCreated(0);
+    lastResponseRef.current = { time: Date.now(), response: null };
+    setData({
+      timeStamp: [],
+      logRate: [],
+    });
+
+    // set running on
+    setRunning.on();
+
+    // connect to socket
     let stompClient = Stomp.over(
       () => new SockJS('http://localhost:8080/websocket-batch-service')
     );
     stompClient.debug = () => {}; //disables stomp debug console logs
     stompClient.connect({}, function (frame) {
       stompClient.subscribe('/topic/job/' + jobID, function (response) {
+        // parse response
         response = JSON.parse(response.body);
-        response.timeStamp = response.timeStamp * 1000;
 
+        // update logsCreated
         console.log(response);
         setlogsCreated(response.logLineCount);
 
+        // update chart data
         if (lastResponseRef.current.response === null) {
           setData({
             timeStamp: [response.timeStamp],
             logRate: [0],
           });
+
+          // show chart once first data recieved
+          setShowChart.on();
         } else {
           const logRate = Math.round(
             (response.logLineCount -
@@ -80,49 +99,52 @@ function Tracking({ jobID, setJobID }) {
           }));
         }
 
+        // update last response ref
         lastResponseRef.current.response = response;
         lastResponseRef.current.time = Date.now();
       });
     });
 
-    setUptime(0);
-    setlogsCreated(0);
-    lastResponseRef.current = { time: Date.now(), response: null };
-
-    setRunning.on();
-
-    return () => stompClient.deactivate();
+    // cleanup
+    return () => {
+      // deactivate socket
+      stompClient.deactivate();
+    };
   }, [jobID, setRunning, setData]);
 
   // uptime and active intervals while job is running
   useEffect(() => {
     let timerInterval;
     let activeInterval;
-    if (isRunning) {
+    if (running) {
+      // interval to update timer
       timerInterval = setInterval(() => {
         setUptime(prevTime => prevTime + 1);
       }, 1000);
 
+      // interval to timeout socket
       activeInterval = setInterval(() => {
         if (Number(Date.now() - lastResponseRef.current.time) > 2500) {
           setRunning.off();
           setJobID(null);
         }
       }, 1000);
-    } else if (!isRunning) {
+    } else if (!running) {
       clearInterval(timerInterval);
       clearInterval(activeInterval);
     }
+
+    // cleanup
     return () => {
       clearInterval(timerInterval);
       clearInterval(activeInterval);
     };
-  }, [isRunning, setRunning, setJobID]);
+  }, [running, setRunning, setJobID]);
 
   // handle cancel button
   const handleCancel = () => {
     console.log(data);
-    setIsLoading.on();
+    setLoading.on();
 
     fetch(process.env.REACT_APP_API_URL + 'generate/stream/stop/' + jobID, {
       method: 'POST',
@@ -140,12 +162,12 @@ function Tracking({ jobID, setJobID }) {
         setJobID(null);
       })
       .catch(err => alert(err))
-      .finally(() => setIsLoading.off());
+      .finally(() => setLoading.off());
   };
 
   return (
     <VStack spacing="0.5em" align="start">
-      <Text>{isRunning ? 'Running' : 'Standby'}</Text>
+      <Text>{running ? 'Running' : 'Standby'}</Text>
       <Text>Uptime: {secondsToTimeString(uptime)}</Text>logsCreated
       <Text>Logs created: {logsCreated}</Text>
       <Box pt="1em">
@@ -153,15 +175,17 @@ function Tracking({ jobID, setJobID }) {
           type="submit"
           colorScheme="red"
           onClick={handleCancel}
-          isLoading={isLoading}
+          isLoading={loading}
           isDisabled={jobID === null}
         >
           Cancel
         </Button>
       </Box>
-      <Box minW="35em" pt="2em">
-        <Chart data={data} colorMode={colorMode} />
-      </Box>
+      {showChart && (
+        <Box minW="32em" pt="2em">
+          <Chart data={data} colorMode={colorMode} />
+        </Box>
+      )}
     </VStack>
   );
 }
