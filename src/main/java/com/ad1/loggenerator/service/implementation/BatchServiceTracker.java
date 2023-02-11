@@ -24,12 +24,19 @@ public class BatchServiceTracker {
      * Milliseconds to wait between sending data to frontend
      */
     private final long millsecondsPerMessage = 1000;
+    /**
+     * Object used to send messages to a the broker channel
+     */
     @Autowired
     private SimpMessagingTemplate template;
     /**
-     * HashMap of all batch jobs
+     * HashMap of all active batch jobs
      */
-    private Map<String, BatchTracker> jobsList = new ConcurrentHashMap<String, BatchTracker>();
+    private Map<String, BatchTracker> activeJobsList = new ConcurrentHashMap<String, BatchTracker>();
+    /**
+     * HashMap of all completed batch jobs and active batch jobs
+     */
+    private Map<String, BatchTracker> historyJobsList = new ConcurrentHashMap<String, BatchTracker>();
 
     /**
      * Sends log data for every batch job in the jobs list. Then removes batch jobs
@@ -37,7 +44,7 @@ public class BatchServiceTracker {
      */
     @Async("asyncTaskExecutor")
     public void sendBatchData() throws InterruptedException {
-        if (jobsList.size() == 0) {
+        if (activeJobsList.size() == 0) {
             return;
         }
 
@@ -45,38 +52,71 @@ public class BatchServiceTracker {
         String destination = "/topic/job";
         LogMessage message = new LogMessage();
 
-        while (jobsList.size() > 0) {
+        while (activeJobsList.size() > 0) {
             Thread.sleep(millsecondsPerMessage);
-
-            for (String jobId : jobsList.keySet()) {
-                job = jobsList.get(jobId);
+            
+            for (String jobId : activeJobsList.keySet()) {
+                job = activeJobsList.get(jobId);
 
                 message.setLogLineCount(job.getLogCount());
                 message.setTimeStamp(System.currentTimeMillis() / 1000);
                 template.convertAndSend(destination + "/" + jobId, message);
 
                 if (job.getLogCount() >= job.getBatchSize()) {
-                    jobsList.remove(jobId);
+                    setBatchJobToCompleted(job);
                 }
             }
         }
     }
 
     /**
-     * Add a new batch job to the jobs list
-     * 
-     * @param batchTracker the new batch job tracker
+     * Utility method to process a batch job tracker as completed
+     * @param job The batch job tracker that is completed
      */
-    public void addNewJob(BatchTracker batchTracker) {
-        jobsList.put(batchTracker.getJobId(), batchTracker);
+    private void setBatchJobToCompleted(BatchTracker job) {
+        activeJobsList.remove(job.getJobId());
+        job.setEndTime(System.currentTimeMillis() / 1000);
     }
 
     /**
-     * Return the number of batch jobs
-     * 
+     * Add a new batch job to the historyJobsList and activeJobsList
+     * @param batchTracker the new batch job tracker
+     */
+    public void addNewJob(BatchTracker batchTracker) {
+        historyJobsList.put(batchTracker.getJobId(), batchTracker);
+        activeJobsList.put(batchTracker.getJobId(), batchTracker);
+    }
+
+    /**
+     * Return the number of active batch jobs
      * @return the number of batch jobs
      */
-    public int getJobsListSize() {
-        return jobsList.size();
+    public int getActiveJobsListSize() {
+        return activeJobsList.size();
+    }
+
+    /**
+     * Return the number of completed batch jobs and active batch jobs
+     * @return the number of completed and active batch jobs
+     */
+    public int getHistoryJobsListSize() {
+        return historyJobsList.size();
+    }
+
+    /**
+     * Get the list of all completed batch jobs and active batch jobs
+     * @return the list of all completed batch jobs and active batch jobs
+     */
+    public Map<String, BatchTracker> getHistoryJobsList() {
+        return historyJobsList;
+    }
+
+    /**
+     * Get a specific batch job tracker from the historyJobsList
+     * @param jobId the id of the batch job tracker
+     * @return the batch job tracker
+     */
+    public BatchTracker getBatchJobTracker(String jobId) {
+        return historyJobsList.get(jobId);
     }
 }

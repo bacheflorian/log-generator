@@ -29,12 +29,19 @@ public class StreamServiceTracker {
      * Milliseconds to wait between sending data to frontend
      */
     private final long millsecondsPerMessage = 1000;
+    /**
+     * Object used to send messages to a the broker channel
+     */
     @Autowired
     private SimpMessagingTemplate template;
     /**
-     * HashMap of all stream jobs
+     * HashMap of all active stream jobs
      */
-    private Map<String, StreamTracker> jobsList = new ConcurrentHashMap<String, StreamTracker>();
+    private Map<String, StreamTracker> activeJobsList = new ConcurrentHashMap<String, StreamTracker>();
+    /**
+     * HashMap of all completed stream jobs and active stream jobs
+     */
+    private Map<String, StreamTracker> historyJobsList = new ConcurrentHashMap<String, StreamTracker>();
 
     /**
      * Sends stream data to the front end, checks every stream job
@@ -44,15 +51,15 @@ public class StreamServiceTracker {
     @Async("asyncTaskExecutor")
     public void checkLastPings() throws InterruptedException {
 
-        if (jobsList.size() == 0) {
+        if (activeJobsList.size() == 0) {
             return;
         }
 
-        while (jobsList.size() > 0) {
+        while (activeJobsList.size() > 0) {
             Thread.sleep(millsecondsPerMessage);
 
-            for (String jobId : jobsList.keySet()) {
-                StreamTracker job = jobsList.get(jobId);
+            for (String jobId : activeJobsList.keySet()) {
+                StreamTracker job = activeJobsList.get(jobId);
 
                 sendStreamData(job);
 
@@ -61,7 +68,7 @@ public class StreamServiceTracker {
                 }
 
                 if (!job.getContinueStreaming()) {
-                    jobsList.remove(jobId);
+                    setStreamJobToCompleted(job);
                 }
             }
         }
@@ -75,7 +82,7 @@ public class StreamServiceTracker {
      */
     public void sendStreamData(StreamTracker job) throws InterruptedException {
 
-        if (jobsList.size() == 0) {
+        if (activeJobsList.size() == 0) {
             return;
         }
 
@@ -91,22 +98,21 @@ public class StreamServiceTracker {
     }
 
     /**
-     *
-     * Adds a new stream job to the jobs list
-     * 
-     * @param streamTracker the new stream job tracker
+     * Utility method to process a stream job tracker as completed
+     * @param job The stream job tracker that is completed
      */
-    public void addNewJob(StreamTracker streamTracker) {
-        jobsList.put(streamTracker.getJobId(), streamTracker);
+    private void setStreamJobToCompleted(StreamTracker job) {
+        activeJobsList.remove(job.getJobId());
+        job.setEndTime(System.currentTimeMillis() / 1000);
     }
 
     /**
-     * Returns the number of jobs
-     * 
-     * @return the number of jobs
+     * Add a new stream job to the historyJobsList and activeJobsList
+     * @param streamTracker the new stream job tracker
      */
-    public int getJobsListSize() {
-        return jobsList.size();
+    public void addNewJob(StreamTracker streamTracker) {
+        historyJobsList.put(streamTracker.getJobId(), streamTracker);
+        activeJobsList.put(streamTracker.getJobId(), streamTracker);
     }
 
     /**
@@ -116,7 +122,7 @@ public class StreamServiceTracker {
      * @return
      */
     public boolean stopStreamJob(String jobId) {
-        StreamTracker streamTracker = jobsList.get(jobId);
+        StreamTracker streamTracker = activeJobsList.get(jobId);
         if (streamTracker == null) {
             return false;
         }
@@ -129,12 +135,45 @@ public class StreamServiceTracker {
      * Update the lastPing to continue a stream job
      */
     public boolean continueStreamJob(String jobId) {
-        StreamTracker streamTracker = jobsList.get(jobId);
+        StreamTracker streamTracker = activeJobsList.get(jobId);
         if (streamTracker == null) {
             return false;
         }
 
         streamTracker.setLastPing(System.currentTimeMillis() / 1000);
         return true;
+    }
+
+    /**
+     * Returns the number of active stream jobs
+     * @return the number of jobs
+     */
+    public int getActiveJobsListSize() {
+        return activeJobsList.size();
+    }
+
+    /**
+     * Returns the number of all active and completed stream jobs
+     * @return the number of all active and completed jobs
+     */
+    public int getHistoryJobsListSize() {
+        return historyJobsList.size();
+    }
+
+    /**
+     * Get the list of all completed stream jobs and active stream jobs
+     * @return the list of all completed stream jobs and active stream jobs
+     */
+    public Map<String, StreamTracker> getHistoryJobsList() {
+        return historyJobsList;
+    }
+
+    /**
+     * Get a specific stream job tracker from the historyJobsList
+     * @param jobId the id of the stream job tracker
+     * @return the stream job tracker
+     */
+    public StreamTracker getStreamJobTracker(String jobId) {
+        return historyJobsList.get(jobId);
     }
 }

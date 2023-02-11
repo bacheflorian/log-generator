@@ -15,5 +15,9 @@ public class BatchTracker {
     private int logCount;
     // size of the batch requested
     private int batchSize;
+    // the start time of the batch job in seconds
+    private long startTime;
+    // the end time of the batch job in seconds
+    private long endTime;
     
 }

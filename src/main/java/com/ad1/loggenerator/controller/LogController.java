@@ -13,12 +13,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ad1.loggenerator.exception.JobNotFoundException;
+import com.ad1.loggenerator.model.AllJobMetrics;
+import com.ad1.loggenerator.model.BatchJobMetrics;
 import com.ad1.loggenerator.model.BatchTracker;
 import com.ad1.loggenerator.model.ContinueMessage;
 import com.ad1.loggenerator.model.SelectionModel;
+import com.ad1.loggenerator.model.StreamJobMetrics;
 import com.ad1.loggenerator.model.StreamTracker;
 import com.ad1.loggenerator.service.implementation.BatchService;
 import com.ad1.loggenerator.service.implementation.BatchServiceTracker;
+import com.ad1.loggenerator.service.implementation.StatisticsUtilitiesService;
 import com.ad1.loggenerator.service.implementation.StreamServiceTracker;
 import com.ad1.loggenerator.service.implementation.StreamingService;
 
@@ -37,6 +42,7 @@ public class LogController {
     private final BatchServiceTracker batchServiceTracker;
     private final StreamingService streamingService;
     private final StreamServiceTracker streamServiceTracker;
+    private final StatisticsUtilitiesService statisticsUtilitiesService;
 
     // general request for generating batch files or streaming
     @PostMapping("/batch")
@@ -46,11 +52,17 @@ public class LogController {
         if (selectionModel.getMode().equals("Batch")) {
             String jobId = batchService.generateJobId();
             selectionModel.setJobId(jobId);
-            BatchTracker batchJobTracker = new BatchTracker(jobId, 0,
-                    selectionModel.getBatchSettings().getNumberOfLogs());
+            BatchTracker batchJobTracker = 
+                new BatchTracker(
+                    jobId, 
+                    0, 
+                    selectionModel.getBatchSettings().getNumberOfLogs(),
+                    System.currentTimeMillis() / 1000,
+                    -1
+                    );
             batchService.batchMode(selectionModel, batchJobTracker);
             batchServiceTracker.addNewJob(batchJobTracker);
-            if (batchServiceTracker.getJobsListSize() == 1) {
+            if (batchServiceTracker.getActiveJobsListSize() == 1) {
                 batchServiceTracker.sendBatchData();
             }
             return new ResponseEntity<>(jobId, HttpStatus.OK);
@@ -66,11 +78,17 @@ public class LogController {
         if (selectionModel.getMode().equals("Stream")) {
             String jobId = streamingService.generateJobId();
             selectionModel.setJobId(jobId);
-            StreamTracker streamJobTracker = new StreamTracker(jobId, 0,
-                    System.currentTimeMillis() / 1000, true);
+            StreamTracker streamJobTracker = new StreamTracker(
+                jobId, 
+                0, 
+                System.currentTimeMillis() / 1000,
+                true,
+                System.currentTimeMillis() / 1000,
+                -1
+                );
             streamingService.streamMode(selectionModel, streamJobTracker);
             streamServiceTracker.addNewJob(streamJobTracker);
-            if (streamServiceTracker.getJobsListSize() == 1) {
+            if (streamServiceTracker.getActiveJobsListSize() == 1) {
                 streamServiceTracker.checkLastPings();
             }
             return new ResponseEntity<>(jobId, HttpStatus.OK);
@@ -128,25 +146,43 @@ public class LogController {
     }
 
     /**
-     * Method to keep track of number of active batch services
-     * 
+     * Method to get metrics for a batch job
      * @return
      */
-    @GetMapping("batch/number")
-    public ResponseEntity<Integer> numberOfRunningBatchService() {
-        int batchTracker = batchServiceTracker.getJobsListSize();
-        return new ResponseEntity<>(batchTracker, HttpStatus.OK);
+    @GetMapping("/stats/batch/{jobId}")
+    public BatchJobMetrics getBatchJobMetrics(@PathVariable String jobId) {
+        BatchJobMetrics batchJobMetrics = statisticsUtilitiesService.generateBatchJobMetrics(jobId);
+
+        if (batchJobMetrics == null) {
+            throw new JobNotFoundException("Job Id not found for job " + jobId);
+        }
+
+        return batchJobMetrics;
     }
 
     /**
-     * Method to keep track of the number of running stream services
-     * 
+     * Method to get metrics for a stream job
      * @return
      */
-    @GetMapping("stream/number")
-    public ResponseEntity<Integer> numberOfRunningStreamService() {
-        int streamTracker = streamServiceTracker.getJobsListSize();
-        return new ResponseEntity<>(streamTracker, HttpStatus.OK);
+    @GetMapping("/stats/stream/{jobId}")
+    public StreamJobMetrics getStreamJobMetrics(@PathVariable String jobId) {
+        StreamJobMetrics streamJobMetrics = statisticsUtilitiesService.generateStreamJobMetrics(jobId);
+
+        if (streamJobMetrics == null) {
+            throw new JobNotFoundException("Job Id not found for " + jobId);
+        }
+
+        return streamJobMetrics;
+    }
+
+    /**
+     * Method to get metrics of all running and completed 
+     * batch and stream jobs.
+     * @return
+     */
+    @GetMapping("/stats")
+    public AllJobMetrics getAllJobMetrics() {
+        return statisticsUtilitiesService.generateAllJobMetrics();
     }
 
 }
