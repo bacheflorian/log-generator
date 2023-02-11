@@ -46,4 +46,21 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorDetails, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    /**
+     * Handles specified exception what a job id is not found
+     * @param exception
+     * @param webRequest
+     * @return error message details
+     */
+    @ExceptionHandler(JobNotFoundException.class)
+    public ResponseEntity<ErrorDetails> handleJobNotFoundException(JobNotFoundException exception,
+                                                                   WebRequest webRequest) {
+        ErrorDetails errorDetails = new ErrorDetails(LocalDateTime.now(),
+                exception.getMessage(),
+                webRequest.getDescription(false),
+                "SPECIFIED JOB ID NOT FOUND"
+        );
+        return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
+    }
+
 }
