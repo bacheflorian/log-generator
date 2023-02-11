@@ -1,8 +1,9 @@
 {
 	"info": {
-		"_postman_id": "ea2a5801-2b3d-4ba0-99dc-0f684195e151",
+		"_postman_id": "eea15104-9abb-4b49-9b71-67aa454f148d",
 		"name": "log-generator",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "15252554"
 	},
 	"item": [
 		{
@@ -127,6 +128,14 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "valid_continueRequest",
+					"request": {
+						"method": "POST",
+						"header": []
+					},
+					"response": []
 				}
 			]
 		},
@@ -140,7 +149,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n  \"repeatingLoglinesPercent\": 0.055,\r\n  \"fieldSettings\": {\r\n    \"includeTimeStamp\": true,\r\n    \"includeProcessingTime\": true,\r\n    \"includeCurrentUserID\": false,\r\n    \"includeBusinessGUID\": true,\r\n    \"includePathToFile\": true,\r\n    \"includeFileSHA256\": true,\r\n    \"includeDisposition\": true\r\n  },\r\n  \"malwareSettings\": {\r\n    \"includeTrojan\": false,\r\n    \"includeAdware\": false,\r\n    \"includeRansom\": false\r\n  },\r\n  \"mode\": \"Batch\",\r\n  \"streamSettings\": {\r\n    \"streamAddress\": \"\",\r\n    \"saveLogs\": false\r\n  },\r\n  \"batchSettings\": {\r\n    \"numberOfLogs\": 1237\r\n  }\r\n}",
+							"raw": "{\r\n  \"repeatingLoglinesPercent\": 0.055,\r\n  \"fieldSettings\": {\r\n    \"includeTimeStamp\": true,\r\n    \"includeProcessingTime\": true,\r\n    \"includeCurrentUserID\": false,\r\n    \"includeBusinessGUID\": true,\r\n    \"includePathToFile\": true,\r\n    \"includeFileSHA256\": true,\r\n    \"includeDisposition\": true\r\n  },\r\n  \"malwareSettings\": {\r\n    \"includeTrojan\": false,\r\n    \"includeAdware\": false,\r\n    \"includeRansom\": false\r\n  },\r\n  \"mode\": \"Batch\",\r\n  \"streamSettings\": {\r\n    \"streamAddress\": \"\",\r\n    \"saveLogs\": false\r\n  },\r\n  \"batchSettings\": {\r\n    \"numberOfLogs\": 5000000\r\n  }\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -161,6 +170,35 @@
 								"batch"
 							]
 						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "stats",
+			"item": [
+				{
+					"name": "valid_getStreamStats",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "valid_getBatchStats",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "valid_getAllStats",
+					"request": {
+						"method": "GET",
+						"header": []
 					},
 					"response": []
 				}
