@@ -19,7 +19,7 @@ import lombok.Data;
 @Data
 @Service
 public class BatchServiceTracker {
-    
+
     /**
      * Milliseconds to wait between sending data to frontend
      */
@@ -49,7 +49,7 @@ public class BatchServiceTracker {
         }
 
         BatchTracker job = null;
-        String destination = "/topic/batch";
+        String destination = "/topic/job";
         LogMessage message = new LogMessage();
 
         while (activeJobsList.size() > 0) {
@@ -86,7 +86,7 @@ public class BatchServiceTracker {
         historyJobsList.put(batchTracker.getJobId(), batchTracker);
         activeJobsList.put(batchTracker.getJobId(), batchTracker);
     }
-    
+
     /**
      * Return the number of active batch jobs
      * @return the number of batch jobs

@@ -44,8 +44,8 @@ public class StreamServiceTracker {
     private Map<String, StreamTracker> historyJobsList = new ConcurrentHashMap<String, StreamTracker>();
 
     /**
-     * Sends stream data to the front end, checks every stream job 
-     * and sets continueStreaming to false if lastPing+5s < current time. 
+     * Sends stream data to the front end, checks every stream job
+     * and sets continueStreaming to false if lastPing+5s < current time.
      * Then removes all stream jobs with continueStreaming set to false
      */
     @Async("asyncTaskExecutor")
@@ -77,6 +77,7 @@ public class StreamServiceTracker {
 
     /**
      * Sends log data for a stream job
+     * 
      * @throws InterruptedException
      */
     public void sendStreamData(StreamTracker job) throws InterruptedException {
@@ -85,12 +86,12 @@ public class StreamServiceTracker {
             return;
         }
 
-        String destination = "/topic/stream";
+        String destination = "/topic/job";
         LogMessage message = new LogMessage();
 
         if (job != null) {
             message.setLogLineCount(job.getLogCount());
-            message.setTimeStamp(System.currentTimeMillis()/1000);
+            message.setTimeStamp(System.currentTimeMillis() / 1000);
 
             template.convertAndSend(destination + "/" + job.getJobId(), message);
         }
@@ -124,7 +125,7 @@ public class StreamServiceTracker {
         StreamTracker streamTracker = activeJobsList.get(jobId);
         if (streamTracker == null) {
             return false;
-        } 
+        }
 
         streamTracker.setContinueStreaming(false);
         return true;
@@ -137,9 +138,9 @@ public class StreamServiceTracker {
         StreamTracker streamTracker = activeJobsList.get(jobId);
         if (streamTracker == null) {
             return false;
-        } 
+        }
 
-        streamTracker.setLastPing(System.currentTimeMillis()/1000);
+        streamTracker.setLastPing(System.currentTimeMillis() / 1000);
         return true;
     }
 

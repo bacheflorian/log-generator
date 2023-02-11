@@ -9,11 +9,10 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
-    
+
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/websocket-batch-service");
-        registry.addEndpoint("/websocket-batch-service").withSockJS();
+        registry.addEndpoint("/websocket-batch-service").setAllowedOrigins("http://localhost:3000/").withSockJS();
     }
 
     @Override
