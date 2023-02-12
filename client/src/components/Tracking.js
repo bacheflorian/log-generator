@@ -1,11 +1,4 @@
-import {
-  Box,
-  Button,
-  Text,
-  useBoolean,
-  useColorMode,
-  VStack,
-} from '@chakra-ui/react';
+import { Box, Button, Text, useBoolean, VStack } from '@chakra-ui/react';
 import { Stomp } from '@stomp/stompjs';
 import { React, useEffect, useRef, useState } from 'react';
 import SockJS from 'sockjs-client';
@@ -40,7 +33,6 @@ function Tracking({ jobID, setJobID }) {
   });
   const [logsCreated, setlogsCreated] = useState(0);
   const lastResponseRef = useRef({ time: 0, response: null });
-  const { colorMode } = useColorMode();
   const [showChart, setShowChart] = useBoolean(false);
 
   //conenct to socket once there is a new jobID
@@ -110,7 +102,7 @@ function Tracking({ jobID, setJobID }) {
       // deactivate socket
       stompClient.deactivate();
     };
-  }, [jobID, setRunning, setData]);
+  }, [jobID, setRunning, setData, setShowChart]);
 
   // uptime and active intervals while job is running
   useEffect(() => {
@@ -143,7 +135,6 @@ function Tracking({ jobID, setJobID }) {
 
   // handle cancel button
   const handleCancel = () => {
-    console.log(data);
     setLoading.on();
 
     fetch(process.env.REACT_APP_API_URL + 'generate/stream/stop/' + jobID, {
@@ -183,7 +174,7 @@ function Tracking({ jobID, setJobID }) {
       </Box>
       {showChart && (
         <Box minW="32em" pt="2em">
-          <Chart data={data} colorMode={colorMode} />
+          <Chart data={data} />
         </Box>
       )}
     </VStack>

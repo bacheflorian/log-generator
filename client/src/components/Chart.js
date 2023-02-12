@@ -1,9 +1,12 @@
+import { useColorMode } from '@chakra-ui/react';
 import React from 'react';
-import Chart from 'react-apexcharts';
+import ApexChart from 'react-apexcharts';
 
-function chart({ data, colorMode }) {
+function Chart({ data }) {
+  const { colorMode } = useColorMode();
+
   return (
-    <Chart
+    <ApexChart
       type="area"
       options={{
         chart: {
@@ -41,7 +44,7 @@ function chart({ data, colorMode }) {
           type: 'datetime',
           labels: {
             datetimeUTC: false,
-            format: 'HH:m:ss',
+            format: 'HH:mm:ss',
           },
         },
       }}
@@ -55,4 +58,4 @@ function chart({ data, colorMode }) {
   );
 }
 
-export default chart;
+export default Chart;
