@@ -56,7 +56,6 @@ public class StreamServiceTracker {
         }
 
         while (activeJobsList.size() > 0) {
-            Thread.sleep(millsecondsPerMessage);
 
             for (String jobId : activeJobsList.keySet()) {
                 StreamTracker job = activeJobsList.get(jobId);
@@ -71,6 +70,8 @@ public class StreamServiceTracker {
                     setStreamJobToCompleted(job);
                 }
             }
+
+            Thread.sleep(millsecondsPerMessage);
         }
 
     }
@@ -91,7 +92,7 @@ public class StreamServiceTracker {
 
         if (job != null) {
             message.setLogLineCount(job.getLogCount());
-            message.setTimeStamp(System.currentTimeMillis() / 1000);
+            message.setTimeStamp(System.currentTimeMillis());
 
             template.convertAndSend(destination + "/" + job.getJobId(), message);
         }
@@ -99,6 +100,7 @@ public class StreamServiceTracker {
 
     /**
      * Utility method to process a stream job tracker as completed
+     * 
      * @param job The stream job tracker that is completed
      */
     private void setStreamJobToCompleted(StreamTracker job) {
@@ -108,6 +110,7 @@ public class StreamServiceTracker {
 
     /**
      * Add a new stream job to the historyJobsList and activeJobsList
+     * 
      * @param streamTracker the new stream job tracker
      */
     public void addNewJob(StreamTracker streamTracker) {
@@ -146,6 +149,7 @@ public class StreamServiceTracker {
 
     /**
      * Returns the number of active stream jobs
+     * 
      * @return the number of jobs
      */
     public int getActiveJobsListSize() {
@@ -154,6 +158,7 @@ public class StreamServiceTracker {
 
     /**
      * Returns the number of all active and completed stream jobs
+     * 
      * @return the number of all active and completed jobs
      */
     public int getHistoryJobsListSize() {
@@ -162,6 +167,7 @@ public class StreamServiceTracker {
 
     /**
      * Get the list of all completed stream jobs and active stream jobs
+     * 
      * @return the list of all completed stream jobs and active stream jobs
      */
     public Map<String, StreamTracker> getHistoryJobsList() {
@@ -170,6 +176,7 @@ public class StreamServiceTracker {
 
     /**
      * Get a specific stream job tracker from the historyJobsList
+     * 
      * @param jobId the id of the stream job tracker
      * @return the stream job tracker
      */

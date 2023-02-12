@@ -21,7 +21,7 @@ function Home() {
           </Heading>
           <Settings jobID={jobID} setJobID={setJobID} />
         </Box>
-        <Box maxW="50em" minW="30em">
+        <Box maxW="50em" minW="32em">
           <Heading as="h4" size="sm" ml="-1em" pb="1.5em">
             Status
           </Heading>

@@ -53,24 +53,26 @@ public class BatchServiceTracker {
         LogMessage message = new LogMessage();
 
         while (activeJobsList.size() > 0) {
-            Thread.sleep(millsecondsPerMessage);
-            
+
             for (String jobId : activeJobsList.keySet()) {
                 job = activeJobsList.get(jobId);
 
                 message.setLogLineCount(job.getLogCount());
-                message.setTimeStamp(System.currentTimeMillis() / 1000);
+                message.setTimeStamp(System.currentTimeMillis());
                 template.convertAndSend(destination + "/" + jobId, message);
 
                 if (job.getLogCount() >= job.getBatchSize()) {
                     setBatchJobToCompleted(job);
                 }
             }
+
+            Thread.sleep(millsecondsPerMessage);
         }
     }
 
     /**
      * Utility method to process a batch job tracker as completed
+     * 
      * @param job The batch job tracker that is completed
      */
     private void setBatchJobToCompleted(BatchTracker job) {
@@ -80,6 +82,7 @@ public class BatchServiceTracker {
 
     /**
      * Add a new batch job to the historyJobsList and activeJobsList
+     * 
      * @param batchTracker the new batch job tracker
      */
     public void addNewJob(BatchTracker batchTracker) {
@@ -89,6 +92,7 @@ public class BatchServiceTracker {
 
     /**
      * Return the number of active batch jobs
+     * 
      * @return the number of batch jobs
      */
     public int getActiveJobsListSize() {
@@ -97,6 +101,7 @@ public class BatchServiceTracker {
 
     /**
      * Return the number of completed batch jobs and active batch jobs
+     * 
      * @return the number of completed and active batch jobs
      */
     public int getHistoryJobsListSize() {
@@ -105,6 +110,7 @@ public class BatchServiceTracker {
 
     /**
      * Get the list of all completed batch jobs and active batch jobs
+     * 
      * @return the list of all completed batch jobs and active batch jobs
      */
     public Map<String, BatchTracker> getHistoryJobsList() {
@@ -113,6 +119,7 @@ public class BatchServiceTracker {
 
     /**
      * Get a specific batch job tracker from the historyJobsList
+     * 
      * @param jobId the id of the batch job tracker
      * @return the batch job tracker
      */
