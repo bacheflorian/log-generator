@@ -69,10 +69,20 @@ function Tracking({ jobID, setJobID }) {
 
         // update chart data
         if (lastResponseRef.current.response === null) {
-          setData({
-            timeStamp: [response.timeStamp],
-            logRate: [0],
-          });
+          // set initial data
+          if (response.logLineCount === 0) {
+            // if no logs generated yet, initial log rate of 0
+            setData({
+              timeStamp: [response.timeStamp],
+              logRate: [0],
+            });
+          } else {
+            // if some logs generated, initial log rate of 0, then number generated
+            setData({
+              timeStamp: [response.timeStamp - 1000, response.timeStamp],
+              logRate: [0, response.logLineCount],
+            });
+          }
 
           // show chart once first data recieved
           setShowChart.on();
@@ -173,7 +183,7 @@ function Tracking({ jobID, setJobID }) {
         </Button>
       </Box>
       {showChart && (
-        <Box minW="32em" pt="2em">
+        <Box w="100%" pt="2em">
           <Chart data={data} />
         </Box>
       )}
