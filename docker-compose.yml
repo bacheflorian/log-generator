@@ -1,0 +1,21 @@
+services:
+  frontend:
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
+    depends_on: # won't run container until below is up and running
+      - backend
+
+  backend:
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080
+#    environment:
+#      DB_URL:
+#      DB_USERNAME:
+#      DB_PASSWORD:
+  # database
