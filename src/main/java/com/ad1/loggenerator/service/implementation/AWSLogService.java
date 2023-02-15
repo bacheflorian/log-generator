@@ -1,0 +1,57 @@
+package com.ad1.loggenerator.service.implementation;
+
+import com.ad1.loggenerator.service.AmazonService;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import lombok.Data;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.UUID;
+
+@Data
+@Service
+public class AWSLogService implements AmazonService {
+    /**
+     * Method to create AmazonS3 client
+     * @return s3 client
+     */
+    @Override
+    public AmazonS3 createS3Client() {
+        String accessKey = "";
+        String secretKey = "";
+
+        // Create Amazon S3 client
+        AmazonS3 s3Client = AmazonS3ClientBuilder.standard()
+                .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, secretKey)))
+                .withRegion(Regions.US_EAST_2)
+                .build();
+        return s3Client;
+
+    }
+
+    /**
+     * Method to create currentTimeDate as a String to append to filepath
+     * @return current time
+     */
+    @Override
+    public String createCurrentTimeDate() {
+        LocalDateTime currentDateTime = LocalDateTime.now();
+        DateTimeFormatter formatDateTime = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
+        String timestamp = currentDateTime.format(formatDateTime);
+        return  timestamp;
+    }
+
+    /**
+     * Method to generate random JobIds
+     * @return random job ids in UUID format
+     */
+    @Override
+    public String generateJobId() {
+        return UUID.randomUUID().toString();
+    }
+}
