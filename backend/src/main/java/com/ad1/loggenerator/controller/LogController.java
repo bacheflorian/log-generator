@@ -33,44 +33,15 @@ import java.util.Map;
 @CrossOrigin("http://localhost:3000/")
 public class LogController {
 
-    private final BatchService batchService;
     private final BatchServiceTracker batchServiceTracker;
-    private final StreamingService streamingService;
     private final StreamServiceTracker streamServiceTracker;
     private final StatisticsUtilitiesService statisticsUtilitiesService;
     private final AWSBatchService awsbatchService;
     private final AWSStreamService awsStreamService;
-
-    // general request for generating batch files or streaming
-    @PostMapping("/batch")
-    public ResponseEntity<String> generateBatchRequest(
-            @RequestBody SelectionModel selectionModel) throws InterruptedException {
-        URL object = null;
-        if (selectionModel.getMode().equals("Batch")) {
-            String jobId = batchService.generateJobId();
-            selectionModel.setJobId(jobId);
-            BatchTracker batchJobTracker = 
-                new BatchTracker(
-                    jobId, 
-                    0, 
-                    selectionModel.getBatchSettings().getNumberOfLogs(),
-                    System.currentTimeMillis() / 1000,
-                    -1,
-                        object
-                    );
-            batchService.batchMode(selectionModel, batchJobTracker);
-            batchServiceTracker.addNewJob(batchJobTracker);
-            if (batchServiceTracker.getActiveJobsListSize() == 1) {
-                batchServiceTracker.sendBatchData();
-            }
-            return new ResponseEntity<>(jobId, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>("Invalid Request. Try again", HttpStatus.BAD_REQUEST);
-        }
-    }
+    private final AWSLogService awsLogService;
 
     /**
-     * Method to generate batch files in AWS s3
+     * Method to generate log files in batch mode to AWS s3
      * @param selectionModel
      * @return jobId
      * @throws InterruptedException
@@ -80,7 +51,7 @@ public class LogController {
             @RequestBody SelectionModel selectionModel) throws InterruptedException {
 
         if (selectionModel.getMode().equals("Batch")) {
-            String jobId = awsbatchService.generateJobId();
+            String jobId = awsLogService.generateJobId();
             URL objectURL = null;
             selectionModel.setJobId(jobId);
             BatchTracker batchJobTracker =
@@ -103,40 +74,19 @@ public class LogController {
         }
     }
 
-
-    @PostMapping("/stream")
-    public ResponseEntity<String> generateStreamRequest(
-            @RequestBody SelectionModel selectionModel) throws InterruptedException {
-        URL object = null;
-        if (selectionModel.getMode().equals("Stream")) {
-            String jobId = streamingService.generateJobId();
-            selectionModel.setJobId(jobId);
-            StreamTracker streamJobTracker = new StreamTracker(
-                jobId, 
-                0, 
-                System.currentTimeMillis() / 1000,
-                true,
-                System.currentTimeMillis() / 1000,
-                -1,
-                    object
-                );
-            streamingService.streamMode(selectionModel, streamJobTracker);
-            streamServiceTracker.addNewJob(streamJobTracker);
-            if (streamServiceTracker.getActiveJobsListSize() == 1) {
-                streamServiceTracker.checkLastPings();
-            }
-            return new ResponseEntity<>(jobId, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>("Invalid Request. Try again", HttpStatus.BAD_REQUEST);
-        }
-    }
-
+    /**
+     * Method to stream log files continuously to AWS s3
+     * @param selectionModel
+     * @return jobId
+     * @throws InterruptedException
+     * @throws IOException
+     */
     @PostMapping("/stream/s3")
     public ResponseEntity<String> generateStreamRequestToS3(
             @RequestBody SelectionModel selectionModel) throws InterruptedException, IOException {
 
         if (selectionModel.getMode().equals("Stream")) {
-            String jobId = awsStreamService.generateJobId();
+            String jobId = awsLogService.generateJobId();
             URL objectURL = null;
             selectionModel.setJobId(jobId);
             StreamTracker streamJobTracker = new StreamTracker(
@@ -159,12 +109,19 @@ public class LogController {
         }
     }
 
+    /**
+     * Method to stream log files to AWS S3 in specified buffer size (current default is 20MB)
+     * @param selectionModel
+     * @return jobId
+     * @throws InterruptedException
+     * @throws IOException
+     */
     @PostMapping("/stream/s3/Buffer")
     public ResponseEntity<String> generateStreamRequestToS3Buffer(
             @RequestBody SelectionModel selectionModel) throws InterruptedException, IOException {
 
         if (selectionModel.getMode().equals("Stream")) {
-            String jobId = awsStreamService.generateJobId();
+            String jobId = awsLogService.generateJobId();
             URL objectURL = null;
             selectionModel.setJobId(jobId);
             StreamTracker streamJobTracker = new StreamTracker(

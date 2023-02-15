@@ -32,29 +32,19 @@ public class AWSStreamService {
 
     @Autowired
     private LogService logService;
+    @Autowired
+    private AWSLogService awsLogService;
 
     @Async("asyncTaskExecutor")
     public void streamToS3Buffer(SelectionModel selectionModel, StreamTracker streamJobTracker) throws IOException {
-        // create S3 client instance
-        String accessKey = "AKIATRCCSGZZS2Q5MIUZ";
-        String secretKey = "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";
-        BasicAWSCredentials awsCredentials = new BasicAWSCredentials(accessKey, secretKey);
-        AmazonS3 s3Client = AmazonS3ClientBuilder.standard()
-                .withRegion(Regions.US_EAST_2) // or specify the region you want to use
-                .withCredentials(new AWSStaticCredentialsProvider(awsCredentials))
-                .build();
-
-        // create timestamp for filename
-        LocalDateTime currentDateTime = LocalDateTime.now();
-        DateTimeFormatter formatDateTime = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
-        String timestamp = currentDateTime.format(formatDateTime);
+        // specify the s3 bucket and key for the log file
+        String bucketName = "stream-s3-log-generator";
+        String key = "stream/" + awsLogService.createCurrentTimeDate() + ".json";
+        // create s3 client instance
+        AmazonS3 s3Client = awsLogService.createS3Client();
 
         // reset the start time of the stream
         streamJobTracker.setLastPing(System.currentTimeMillis()/1000);
-
-        // specify the S3 bucket and key for the log file
-        String bucketName = "stream-s3-log-generator";
-        String key = "stream/" + timestamp + ".json";
 
         // specify buffer size for uploading log lines to S3
         int bufferSize = 20 * 1024 * 1024; // 20MB buffer
@@ -102,27 +92,22 @@ public class AWSStreamService {
         // Get the url of the s3 object
         URL objectURL = s3Client.getUrl(bucketName, key);
         streamJobTracker.setGetStreamObjectURL(objectURL);
+        // Get the s3 object and count the log lines saved to the bucket object
+        S3Object s3Object = s3Client.getObject(bucketName, key);
+        streamJobTracker.setLogCount(awsLogService.getLogCount(s3Client, s3Object, bucketName, key));
     }
 
     @Async("asyncTaskExecutor")
     public void streamToS3(SelectionModel selectionModel, StreamTracker streamJobTracker) {
-        // create S3 client instance
-        String accessKey = "AKIATRCCSGZZS2Q5MIUZ";
-        String secretKey = "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";
-        BasicAWSCredentials awsCredentials = new BasicAWSCredentials(accessKey, secretKey);
-        AmazonS3 s3Client = AmazonS3ClientBuilder.standard()
-                .withRegion(Regions.US_EAST_2) // or specify the region you want to use
-                .withCredentials(new AWSStaticCredentialsProvider(awsCredentials))
-                .build();
-
-        // create timestamp for filename
-        LocalDateTime currentDateTime = LocalDateTime.now();
-        DateTimeFormatter formatDateTime = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
-        String timestamp = currentDateTime.format(formatDateTime);
-
-        // specify the S3 bucket and key for the log file
+        // specify the s3 bucket and key for the log file
         String bucketName = "stream-s3-log-generator";
-        String key = "stream/" + timestamp + ".json";
+        String key = "stream/" + awsLogService.createCurrentTimeDate() + ".json";
+
+        // create s3 client instance
+        AmazonS3 s3Client = awsLogService.createS3Client();
+
+        // reset the start time of the stream
+        streamJobTracker.setLastPing(System.currentTimeMillis()/1000);
 
         // create StringBuilder object to append log lines
         StringBuilder stringBuilder = new StringBuilder();
@@ -152,7 +137,6 @@ public class AWSStreamService {
             PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, key, inputStream, metadata);
             s3Client.putObject(putObjectRequest);
 
-
         } catch (SdkClientException e) {
             throw new FilePathNotFoundException(e.getMessage());
         }
@@ -163,10 +147,5 @@ public class AWSStreamService {
         streamJobTracker.setGetStreamObjectURL(objectURL);
     }
 
-
-
-    public String generateJobId() {
-        return UUID.randomUUID().toString();
-    }
 }
 

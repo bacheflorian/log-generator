@@ -28,52 +28,23 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class AWSBatchService implements AmazonService {
+public class AWSBatchService{
     @Autowired
     private LogService logService;
-
-    /**
-     * Method to create AmazonS3 client
-     * @return s3 client
-     */
-    @Override
-    public AmazonS3 createS3Client() {
-        String accessKey = "AKIATRCCSGZZS2Q5MIUZ";
-        String secretKey = "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";
-
-        // Create Amazon S3 client
-        AmazonS3 s3Client = AmazonS3ClientBuilder.standard()
-                .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, secretKey)))
-                .withRegion(Regions.US_EAST_2)
-                .build();
-        return s3Client;
-
-    }
-
-    /**
-     * Method to create currentTimeDate as a String to append to filepath
-     * @return current time
-     */
-    @Override
-    public String createCurrentTimeDate() {
-        LocalDateTime currentDateTime = LocalDateTime.now();
-        DateTimeFormatter formatDateTime = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
-        String timestamp = currentDateTime.format(formatDateTime);
-        return  timestamp;
-    }
-
+    @Autowired
+    private AWSLogService awsLogService;
     /**
      * Generates and populates logs in batch mode
      *
      * @param selectionModel defines all the parameters to be included in the batch
      *                       files as per the user
      */
-    @Override
+
     public void upLoadBatchLogsToS3(SelectionModel selectionModel, BatchTracker batchJobTracker) {
-        // specify s3 bucketname and key
+        // create s3 client instance and specify s3 bucket name and key
         String bucketName = "batch-s3-log-generator";
-        String key = "batch/" + createCurrentTimeDate() + ".json";
-        AmazonS3 s3Client = createS3Client();
+        String key = "batch/" + awsLogService.createCurrentTimeDate() + ".json";
+        AmazonS3 s3Client = awsLogService.createS3Client();
 
         try {
             // batch settings
@@ -96,18 +67,13 @@ public class AWSBatchService implements AmazonService {
             s3Client.putObject(bucketName, key, logLines.toString());
 
         } catch(Exception e){
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred while saving file to aws S3");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred while saving log files to aws S3");
         }
         //Make the s3 object public
         s3Client.setObjectAcl(bucketName, key, CannedAccessControlList.PublicRead);
         // Get the url of the s3 object and set it to the BatchTracker
         URL objectURL = s3Client.getUrl(bucketName, key);
         batchJobTracker.setGetBatchObjectURL(objectURL);
-    }
-
-    @Override
-    public String generateJobId() {
-        return UUID.randomUUID().toString();
     }
 
 }
