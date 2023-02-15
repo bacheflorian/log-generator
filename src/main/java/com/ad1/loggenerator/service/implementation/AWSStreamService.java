@@ -92,6 +92,9 @@ public class AWSStreamService {
         // Get the url of the s3 object
         URL objectURL = s3Client.getUrl(bucketName, key);
         streamJobTracker.setGetStreamObjectURL(objectURL);
+        // Get the s3 object and count the log lines saved to the bucket object
+        S3Object s3Object = s3Client.getObject(bucketName, key);
+        streamJobTracker.setLogCount(awsLogService.getLogCount(s3Client, s3Object, bucketName, key));
     }
 
     @Async("asyncTaskExecutor")
