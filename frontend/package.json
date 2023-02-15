@@ -19,7 +19,10 @@
     "react-icons": "^3.11.0",
 <<<<<<< HEAD:frontend/package.json
 <<<<<<< HEAD:frontend/package.json
+<<<<<<< HEAD:frontend/package.json
     "react-scripts": "5.0.1",
+=======
+>>>>>>> 0ce40a79c4d3f64b9a8dc9b02cf90897ebc2e7e3:client/package.json
     "sockjs-client": "^1.6.1",
 =======
     "react-scripts": "^5.0.1",
