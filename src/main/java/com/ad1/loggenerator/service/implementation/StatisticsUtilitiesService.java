@@ -72,6 +72,7 @@ public class StatisticsUtilitiesService {
         batchJobMetrics.setLogCount(batchJob.getLogCount());
         batchJobMetrics.setStartTime(batchJob.getStartTime());
         batchJobMetrics.setBatchSize(batchJob.getBatchSize());
+        batchJobMetrics.setBatchObjectURL(batchJob.getBatchObjectURL);
 
         if (batchJob.getLogCount() >= batchJob.getBatchSize()) {
             batchJobMetrics.setEndTime(batchJob.getEndTime());
@@ -104,6 +105,7 @@ public class StatisticsUtilitiesService {
         streamJobMetrics.setJobId(streamJob.getJobId());
         streamJobMetrics.setLogCount(streamJob.getLogCount());
         streamJobMetrics.setStartTime(streamJob.getStartTime());
+        streamJobMetrics.setStreamObjectURL(streamJob.getStreamObjectURL);
    
         streamJobMetrics.setRunTime(
             System.currentTimeMillis() / 1000 - streamJob.getStartTime()
