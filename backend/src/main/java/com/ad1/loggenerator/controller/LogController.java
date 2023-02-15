@@ -1,17 +1,12 @@
 package com.ad1.loggenerator.controller;
 
+import com.ad1.loggenerator.service.implementation.*;
 import org.json.simple.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.ad1.loggenerator.exception.JobNotFoundException;
 import com.ad1.loggenerator.model.AllJobMetrics;
@@ -21,13 +16,13 @@ import com.ad1.loggenerator.model.ContinueMessage;
 import com.ad1.loggenerator.model.SelectionModel;
 import com.ad1.loggenerator.model.StreamJobMetrics;
 import com.ad1.loggenerator.model.StreamTracker;
-import com.ad1.loggenerator.service.implementation.BatchService;
-import com.ad1.loggenerator.service.implementation.BatchServiceTracker;
-import com.ad1.loggenerator.service.implementation.StatisticsUtilitiesService;
-import com.ad1.loggenerator.service.implementation.StreamServiceTracker;
-import com.ad1.loggenerator.service.implementation.StreamingService;
 
 import lombok.AllArgsConstructor;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Receives user requests and returns responses via REST API
@@ -43,12 +38,14 @@ public class LogController {
     private final StreamingService streamingService;
     private final StreamServiceTracker streamServiceTracker;
     private final StatisticsUtilitiesService statisticsUtilitiesService;
+    private final AWSBatchService awsbatchService;
+    private final AWSStreamService awsStreamService;
 
     // general request for generating batch files or streaming
     @PostMapping("/batch")
     public ResponseEntity<String> generateBatchRequest(
             @RequestBody SelectionModel selectionModel) throws InterruptedException {
-
+        URL object = null;
         if (selectionModel.getMode().equals("Batch")) {
             String jobId = batchService.generateJobId();
             selectionModel.setJobId(jobId);
@@ -58,7 +55,8 @@ public class LogController {
                     0, 
                     selectionModel.getBatchSettings().getNumberOfLogs(),
                     System.currentTimeMillis() / 1000,
-                    -1
+                    -1,
+                        object
                     );
             batchService.batchMode(selectionModel, batchJobTracker);
             batchServiceTracker.addNewJob(batchJobTracker);
@@ -71,10 +69,45 @@ public class LogController {
         }
     }
 
+    /**
+     * Method to generate batch files in AWS s3
+     * @param selectionModel
+     * @return jobId
+     * @throws InterruptedException
+     */
+    @PostMapping("/batch/s3")
+    public ResponseEntity<String> generateBatchRequestToS3(
+            @RequestBody SelectionModel selectionModel) throws InterruptedException {
+
+        if (selectionModel.getMode().equals("Batch")) {
+            String jobId = awsbatchService.generateJobId();
+            URL objectURL = null;
+            selectionModel.setJobId(jobId);
+            BatchTracker batchJobTracker =
+                    new BatchTracker(
+                            jobId,
+                            0,
+                            selectionModel.getBatchSettings().getNumberOfLogs(),
+                            System.currentTimeMillis() / 1000,
+                            -1,
+                            objectURL
+                    );
+            awsbatchService.upLoadBatchLogsToS3(selectionModel, batchJobTracker);
+            batchServiceTracker.addNewJob(batchJobTracker);
+            if (batchServiceTracker.getActiveJobsListSize() == 1) {
+                batchServiceTracker.sendBatchData();
+            }
+            return new ResponseEntity<>(jobId, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("Invalid Request. Try again", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+
     @PostMapping("/stream")
     public ResponseEntity<String> generateStreamRequest(
             @RequestBody SelectionModel selectionModel) throws InterruptedException {
-
+        URL object = null;
         if (selectionModel.getMode().equals("Stream")) {
             String jobId = streamingService.generateJobId();
             selectionModel.setJobId(jobId);
@@ -84,9 +117,66 @@ public class LogController {
                 System.currentTimeMillis() / 1000,
                 true,
                 System.currentTimeMillis() / 1000,
-                -1
+                -1,
+                    object
                 );
             streamingService.streamMode(selectionModel, streamJobTracker);
+            streamServiceTracker.addNewJob(streamJobTracker);
+            if (streamServiceTracker.getActiveJobsListSize() == 1) {
+                streamServiceTracker.checkLastPings();
+            }
+            return new ResponseEntity<>(jobId, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("Invalid Request. Try again", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("/stream/s3")
+    public ResponseEntity<String> generateStreamRequestToS3(
+            @RequestBody SelectionModel selectionModel) throws InterruptedException, IOException {
+
+        if (selectionModel.getMode().equals("Stream")) {
+            String jobId = awsStreamService.generateJobId();
+            URL objectURL = null;
+            selectionModel.setJobId(jobId);
+            StreamTracker streamJobTracker = new StreamTracker(
+                    jobId,
+                    0,
+                    System.currentTimeMillis() / 1000,
+                    true,
+                    System.currentTimeMillis() / 1000,
+                    -1,
+                    objectURL
+            );
+            awsStreamService.streamToS3(selectionModel, streamJobTracker);
+            streamServiceTracker.addNewJob(streamJobTracker);
+            if (streamServiceTracker.getActiveJobsListSize() == 1) {
+                streamServiceTracker.checkLastPings();
+            }
+            return new ResponseEntity<>(jobId, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("Invalid Request. Try again", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping("/stream/s3/Buffer")
+    public ResponseEntity<String> generateStreamRequestToS3Buffer(
+            @RequestBody SelectionModel selectionModel) throws InterruptedException, IOException {
+
+        if (selectionModel.getMode().equals("Stream")) {
+            String jobId = awsStreamService.generateJobId();
+            URL objectURL = null;
+            selectionModel.setJobId(jobId);
+            StreamTracker streamJobTracker = new StreamTracker(
+                    jobId,
+                    0,
+                    System.currentTimeMillis() / 1000,
+                    true,
+                    System.currentTimeMillis() / 1000,
+                    -1,
+                    objectURL
+            );
+            awsStreamService.streamToS3Buffer(selectionModel, streamJobTracker);
             streamServiceTracker.addNewJob(streamJobTracker);
             if (streamServiceTracker.getActiveJobsListSize() == 1) {
                 streamServiceTracker.checkLastPings();

@@ -18,11 +18,15 @@
     "react-dom": "^18.2.0",
     "react-icons": "^3.11.0",
 <<<<<<< HEAD:frontend/package.json
+<<<<<<< HEAD:frontend/package.json
     "react-scripts": "5.0.1",
     "sockjs-client": "^1.6.1",
 =======
     "react-scripts": "^5.0.1",
 >>>>>>> 91eeab7 (a):client/package.json
+=======
+    "sockjs-client": "^1.6.1",
+>>>>>>> 0ce40a79 (s3 storage for logs generated in batch and stream mode):client/package.json
     "web-vitals": "^2.1.4"
   },
   "scripts": {
@@ -45,5 +49,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "eslint-config-react-app": "^7.0.1"
   }
 }

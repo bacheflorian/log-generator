@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.net.URL;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -33,5 +35,8 @@ public class StreamJobMetrics {
      * Flag representing if the job has completed
      */
     private boolean isCompleted;
+
+    // URL for a particular stream job
+    private URL streamObjectURL;
     
 }
