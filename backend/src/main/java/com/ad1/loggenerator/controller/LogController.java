@@ -48,7 +48,7 @@ public class LogController {
      */
     @PostMapping("/batch/s3")
     public ResponseEntity<String> generateBatchRequestToS3(
-            @RequestBody SelectionModel selectionModel) throws InterruptedException {
+            @RequestBody SelectionModel selectionModel) throws InterruptedException, IOException {
 
         if (selectionModel.getMode().equals("Batch")) {
             String jobId = awsLogService.generateJobId();

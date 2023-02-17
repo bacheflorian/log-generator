@@ -10,6 +10,7 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.S3Object;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,6 +20,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -39,8 +42,8 @@ public class AWSBatchService{
      * @param selectionModel defines all the parameters to be included in the batch
      *                       files as per the user
      */
-
-    public void upLoadBatchLogsToS3(SelectionModel selectionModel, BatchTracker batchJobTracker) {
+    @Async("asyncTaskExecutor")
+    public void upLoadBatchLogsToS3(SelectionModel selectionModel, BatchTracker batchJobTracker) throws IOException {
         // create s3 client instance and specify s3 bucket name and key
         String bucketName = "batch-s3-log-generator";
         String key = "batch/" + awsLogService.createCurrentTimeDate() + ".json";
@@ -54,13 +57,13 @@ public class AWSBatchService{
             for (int i = 0; i < batchSettings.getNumberOfLogs(); i++) {
                 JSONObject logLine = logService.generateLogLine(selectionModel);
                 logLines.append(logLine.toString() + "\n");
-                batchJobTracker.setLogCount(batchJobTracker.getLogCount() + 1);
+//                batchJobTracker.setLogCount(batchJobTracker.getLogCount() + 1);
 
                 // determine if a log lines repeats
                 if (Math.random() < selectionModel.getRepeatingLoglinesPercent()) {
                     logLines.append(logLine.toString() + "\n");
                     i++;
-                    batchJobTracker.setLogCount(batchJobTracker.getLogCount() + 1);
+//                    batchJobTracker.setLogCount(batchJobTracker.getLogCount() + 1);
                 }
             }
             // Upload the batch file to S3
@@ -74,6 +77,9 @@ public class AWSBatchService{
         // Get the url of the s3 object and set it to the BatchTracker
         URL objectURL = s3Client.getUrl(bucketName, key);
         batchJobTracker.setGetBatchObjectURL(objectURL);
+        // Get the s3 object and count the log lines saved to the bucket object
+        S3Object s3Object = s3Client.getObject(bucketName, key);
+        batchJobTracker.setLogCount(awsLogService.getLogCount(s3Client, s3Object, bucketName, key));
     }
 
 }
