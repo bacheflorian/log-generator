@@ -72,7 +72,7 @@ public class StatisticsUtilitiesService {
         batchJobMetrics.setLogCount(batchJob.getLogCount());
         batchJobMetrics.setStartTime(batchJob.getStartTime());
         batchJobMetrics.setBatchSize(batchJob.getBatchSize());
-        batchJobMetrics.setBatchObjectURL(batchJob.getBatchObjectURL);
+        batchJobMetrics.setBatchObjectURL(batchJob.getGetBatchObjectURL());
 
         if (batchJob.getLogCount() >= batchJob.getBatchSize()) {
             batchJobMetrics.setEndTime(batchJob.getEndTime());
