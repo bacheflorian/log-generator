@@ -105,7 +105,7 @@ public class StatisticsUtilitiesService {
         streamJobMetrics.setJobId(streamJob.getJobId());
         streamJobMetrics.setLogCount(streamJob.getLogCount());
         streamJobMetrics.setStartTime(streamJob.getStartTime());
-        streamJobMetrics.setStreamObjectURL(streamJob.getStreamObjectURL);
+        streamJobMetrics.setStreamObjectURL(streamJob.getGetStreamObjectURL());
    
         streamJobMetrics.setRunTime(
             System.currentTimeMillis() / 1000 - streamJob.getStartTime()
