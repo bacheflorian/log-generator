@@ -47,6 +47,10 @@ function Chart({ data }) {
             format: 'HH:mm:ss',
           },
         },
+        yaxis: {
+          min: 0,
+          forceNiceScale: true,
+        },
       }}
       series={[
         {

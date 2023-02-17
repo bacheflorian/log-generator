@@ -17,7 +17,7 @@ import {
 import { Field, Form, Formik } from 'formik';
 import React from 'react';
 
-function Settings({ jobID, setJobID }) {
+function Settings({ jobID, setJobID, setBatchSize }) {
   const validate = values => {
     const errors = {};
 
@@ -118,6 +118,11 @@ function Settings({ jobID, setJobID }) {
           .then(data => {
             console.log(data);
             setJobID(data);
+            if (values.mode === 'Batch') {
+              setBatchSize(values.batchSettings.numberOfLogs);
+            } else {
+              setBatchSize(null);
+            }
           })
           .catch(err => alert(err))
           .finally(() => actions.setSubmitting(false));

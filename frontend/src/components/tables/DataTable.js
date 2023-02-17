@@ -7,11 +7,6 @@ import {
 import {
   Flex,
   IconButton,
-  NumberDecrementStepper,
-  NumberIncrementStepper,
-  NumberInput,
-  NumberInputField,
-  NumberInputStepper,
   Select,
   Table,
   Tbody,
@@ -109,7 +104,7 @@ function DataTable({ columns, data }) {
                 {pageOptions.length}
               </Text>
             </Text>
-            <Text flexShrink="0">Go to page:</Text>{' '}
+            {/*<Text flexShrink="0">Go to page:</Text>{' '}
             <NumberInput
               ml={2}
               mr={8}
@@ -127,7 +122,7 @@ function DataTable({ columns, data }) {
                 <NumberIncrementStepper />
                 <NumberDecrementStepper />
               </NumberInputStepper>
-            </NumberInput>
+            </NumberInput>*/}
             <Select
               w={32}
               value={pageSize}

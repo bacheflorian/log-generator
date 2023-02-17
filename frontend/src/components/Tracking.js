@@ -1,4 +1,11 @@
-import { Box, Button, Text, useBoolean, VStack } from '@chakra-ui/react';
+import {
+  Box,
+  Button,
+  HStack,
+  Text,
+  useBoolean,
+  VStack,
+} from '@chakra-ui/react';
 import { Stomp } from '@stomp/stompjs';
 import { React, useEffect, useRef, useState } from 'react';
 import SockJS from 'sockjs-client';
@@ -9,7 +16,7 @@ const secondsToTimeString = totalSeconds => {
   const hours = Math.floor(totalSeconds / 3600);
   totalSeconds %= 3600;
   const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
+  const seconds = Math.floor(totalSeconds % 60);
   let time = '';
 
   if (Number(hours) > 0) {
@@ -23,7 +30,7 @@ const secondsToTimeString = totalSeconds => {
   return time;
 };
 
-function Tracking({ jobID, setJobID }) {
+function Tracking({ jobID, setJobID, startTime, batchSize }) {
   const [loading, setLoading] = useBoolean(false);
   const [running, setRunning] = useBoolean(false);
   const [uptime, setUptime] = useState(0);
@@ -33,22 +40,28 @@ function Tracking({ jobID, setJobID }) {
   });
   const [logsCreated, setlogsCreated] = useState(0);
   const lastResponseRef = useRef({ time: 0, response: null });
-  const [showChart, setShowChart] = useBoolean(false);
+  const [showChart, setShowChart] = useBoolean(startTime ? true : false);
+  const [lastJobId, setLastJobId] = useState('');
 
   //conenct to socket once there is a new jobID
   useEffect(() => {
-    if (jobID === null) {
+    if (!jobID) {
       return;
     }
 
     // reset values on new jobID
-    setUptime(0);
+    if (startTime) {
+      setUptime((Date.now() - startTime) / 1000);
+    } else {
+      setUptime(0);
+    }
     setlogsCreated(0);
     lastResponseRef.current = { time: Date.now(), response: null };
     setData({
       timeStamp: [],
       logRate: [],
     });
+    setLastJobId(jobID);
 
     // set running on
     setRunning.on();
@@ -68,20 +81,22 @@ function Tracking({ jobID, setJobID }) {
         setlogsCreated(response.logLineCount);
 
         // update chart data
-        if (lastResponseRef.current.response === null) {
-          // set initial data
-          if (response.logLineCount === 0) {
-            // if no logs generated yet, initial log rate of 0
-            setData({
-              timeStamp: [response.timeStamp],
-              logRate: [0],
-            });
-          } else {
-            // if some logs generated, initial log rate of 0, then number generated
-            setData({
-              timeStamp: [response.timeStamp - 1000, response.timeStamp],
-              logRate: [0, response.logLineCount],
-            });
+        if (!lastResponseRef.current.response) {
+          if (!startTime) {
+            // set initial data
+            if (response.logLineCount === 0) {
+              // if no logs generated yet, initial log rate of 0
+              setData({
+                timeStamp: [response.timeStamp],
+                logRate: [0],
+              });
+            } else {
+              // if some logs generated, initial log rate of 0, then number generated
+              setData({
+                timeStamp: [response.timeStamp - 1000, response.timeStamp],
+                logRate: [0, response.logLineCount],
+              });
+            }
           }
 
           // show chart once first data recieved
@@ -112,7 +127,7 @@ function Tracking({ jobID, setJobID }) {
       // deactivate socket
       stompClient.deactivate();
     };
-  }, [jobID, setRunning, setData, setShowChart]);
+  }, [jobID, setRunning, setData, setShowChart, startTime]);
 
   // uptime and active intervals while job is running
   useEffect(() => {
@@ -167,27 +182,34 @@ function Tracking({ jobID, setJobID }) {
   };
 
   return (
-    <VStack spacing="0.5em" align="start">
-      <Text>{running ? 'Running' : 'Standby'}</Text>
-      <Text>Uptime: {secondsToTimeString(uptime)}</Text>logsCreated
-      <Text>Logs created: {logsCreated}</Text>
-      <Box pt="1em">
-        <Button
-          type="submit"
-          colorScheme="red"
-          onClick={handleCancel}
-          isLoading={loading}
-          isDisabled={jobID === null}
-        >
-          Cancel
-        </Button>
-      </Box>
+    <div>
+      <HStack justify="space-between">
+        <VStack spacing="0.1em" align="start">
+          <Text>{running ? 'Running' : 'Standby'}</Text>
+          {lastJobId && <Text>Job id: {lastJobId}</Text>}
+
+          <Text>Uptime: {secondsToTimeString(uptime)}</Text>
+          {batchSize && <Text>Batch Size: {batchSize}</Text>}
+          <Text>Logs created: {logsCreated}</Text>
+        </VStack>
+        <Box pr="12%">
+          <Button
+            type="submit"
+            colorScheme="red"
+            onClick={handleCancel}
+            isLoading={loading}
+            isDisabled={!jobID}
+          >
+            Cancel
+          </Button>
+        </Box>
+      </HStack>
       {showChart && (
-        <Box w="100%" pt="2em">
+        <Box w="100%" pt="1em" ml="-1em">
           <Chart data={data} />
         </Box>
       )}
-    </VStack>
+    </div>
   );
 }
 

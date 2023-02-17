@@ -29,7 +29,8 @@ function Navbar() {
           </Text>
         </Link>
         <MenuItem to="/">Home</MenuItem>
-        <MenuItem to="/jobs">Jobs</MenuItem>
+        <MenuItem to="/active-jobs">Active Jobs</MenuItem>
+        <MenuItem to="/history">History</MenuItem>
       </HStack>
 
       <ColorModeSwitcher />
