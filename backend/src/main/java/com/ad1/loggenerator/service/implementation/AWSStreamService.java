@@ -119,13 +119,13 @@ public class AWSStreamService {
 
                 // append log line to StringBuilder
                 stringBuilder.append(logLine.toString()).append(System.lineSeparator());
-                streamJobTracker.setLogCount(streamJobTracker.getLogCount() + 1);
+//                streamJobTracker.setLogCount(streamJobTracker.getLogCount() + 1);
 
                 // determine if a log line repeats
                 if (Math.random() < selectionModel.getRepeatingLoglinesPercent()) {
                     // append repeated log line to StringBuilder
                     stringBuilder.append(logLine.toString()).append(System.lineSeparator());
-                    streamJobTracker.setLogCount(streamJobTracker.getLogCount() + 1);
+//                    streamJobTracker.setLogCount(streamJobTracker.getLogCount() + 1);
                 }
             }
 
@@ -145,9 +145,9 @@ public class AWSStreamService {
         // Get the url of the s3 object
         URL objectURL = s3Client.getUrl(bucketName, key);
         streamJobTracker.setGetStreamObjectURL(objectURL);
-//        // Get the s3 object and count the log lines saved to the bucket object
-//        S3Object s3Object = s3Client.getObject(bucketName, key);
-//        streamJobTracker.setLogCount(awsLogService.getLogCount(s3Client, s3Object, bucketName, key));
+        // Get the s3 object and count the log lines saved to the bucket object
+        S3Object s3Object = s3Client.getObject(bucketName, key);
+        streamJobTracker.setLogCount(awsLogService.getLogCount(s3Client, s3Object, bucketName, key));
     }
 
 }
