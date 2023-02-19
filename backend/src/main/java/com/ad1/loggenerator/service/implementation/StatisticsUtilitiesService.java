@@ -72,7 +72,11 @@ public class StatisticsUtilitiesService {
         batchJobMetrics.setLogCount(batchJob.getLogCount());
         batchJobMetrics.setStartTime(batchJob.getStartTime());
         batchJobMetrics.setBatchSize(batchJob.getBatchSize());
+        batchJobMetrics.setBatchObjectURL(batchJob.getBatchObjectURL());
 
+        if (batchJob.getLogCount() == 0) {
+            batchJobMetrics.setCompleted(false);
+        }
         if (batchJob.getLogCount() >= batchJob.getBatchSize()) {
             batchJobMetrics.setEndTime(batchJob.getEndTime());
             batchJobMetrics.setCompleted(true);
@@ -104,6 +108,7 @@ public class StatisticsUtilitiesService {
         streamJobMetrics.setJobId(streamJob.getJobId());
         streamJobMetrics.setLogCount(streamJob.getLogCount());
         streamJobMetrics.setStartTime(streamJob.getStartTime());
+        streamJobMetrics.setStreamObjectURL(streamJob.getStreamObjectURL());
    
         streamJobMetrics.setRunTime(
             System.currentTimeMillis() / 1000 - streamJob.getStartTime()
@@ -113,6 +118,8 @@ public class StatisticsUtilitiesService {
             streamJobMetrics.setEndTime(streamJob.getEndTime());
             streamJobMetrics.setCompleted(true);
             streamJobMetrics.setRunTime(streamJob.getEndTime() - streamJob.getStartTime());
+            if(streamJob.getLogCount() == 0)
+                streamJobMetrics.setCompleted(false);
         } else {
             streamJobMetrics.setEndTime(null);
             streamJobMetrics.setCompleted(false);

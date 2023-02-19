@@ -25,7 +25,7 @@ public class BatchServiceTracker {
      */
     private final long millsecondsPerMessage = 1000;
     /**
-     * Object used to send messages to a the broker channel
+     * Object used to send messages to the broker channel
      */
     @Autowired
     private SimpMessagingTemplate template;

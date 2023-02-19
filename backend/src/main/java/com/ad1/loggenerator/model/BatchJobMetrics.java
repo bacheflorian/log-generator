@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.net.URL;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -37,5 +39,8 @@ public class BatchJobMetrics {
      * Flag representing if th job has completed
      */
     private boolean isCompleted;
+
+    // URL for a particular batch job
+    private URL batchObjectURL;
 
 }

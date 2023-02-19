@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.net.URL;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -21,5 +23,6 @@ public class StreamTracker {
     private long startTime;
     // the end time of the stream job in seconds
     private long endTime;
-
+    //URL of stream object created in aws s3
+    private URL streamObjectURL;
 }
