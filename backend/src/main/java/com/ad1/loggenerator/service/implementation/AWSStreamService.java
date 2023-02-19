@@ -91,7 +91,7 @@ public class AWSStreamService {
         s3Client.setObjectAcl(bucketName, key, CannedAccessControlList.PublicRead);
         // Get the url of the s3 object
         URL objectURL = s3Client.getUrl(bucketName, key);
-        streamJobTracker.setGetStreamObjectURL(objectURL);
+        streamJobTracker.setStreamObjectURL(objectURL);
         // Get the s3 object and count the log lines saved to the bucket object
         S3Object s3Object = s3Client.getObject(bucketName, key);
         streamJobTracker.setLogCount(awsLogService.getLogCount(s3Client, s3Object, bucketName, key));
@@ -144,7 +144,7 @@ public class AWSStreamService {
         s3Client.setObjectAcl(bucketName, key, CannedAccessControlList.PublicRead);
         // Get the url of the s3 object
         URL objectURL = s3Client.getUrl(bucketName, key);
-        streamJobTracker.setGetStreamObjectURL(objectURL);
+        streamJobTracker.setStreamObjectURL(objectURL);
         // Get the s3 object and count the log lines saved to the bucket object
         S3Object s3Object = s3Client.getObject(bucketName, key);
         streamJobTracker.setLogCount(awsLogService.getLogCount(s3Client, s3Object, bucketName, key));
