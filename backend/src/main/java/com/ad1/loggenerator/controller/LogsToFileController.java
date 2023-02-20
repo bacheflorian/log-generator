@@ -1,5 +1,6 @@
 package com.ad1.loggenerator.controller;
 
+import com.ad1.loggenerator.exception.AddressNotFoundException;
 import com.ad1.loggenerator.model.*;
 import com.ad1.loggenerator.service.implementation.*;
 import lombok.AllArgsConstructor;
@@ -59,6 +60,19 @@ public class LogsToFileController {
             @RequestBody SelectionModel selectionModel) throws InterruptedException {
         URL object = null;
         if (selectionModel.getMode().equals("Stream")) {
+
+            // If a stream address was specified, check the address
+            if (!selectionModel.getStreamSettings().getStreamAddress().isEmpty()) {
+                boolean isAddressAvailable = streamingService.isAddressAvailable(selectionModel);
+                if (!isAddressAvailable) {
+                    throw new AddressNotFoundException("Stream address " +
+                        selectionModel.getStreamSettings().getStreamAddress() +
+                        " is not available."
+                    );
+                    
+                }
+            }
+
             String jobId = streamingService.generateJobId();
             selectionModel.setJobId(jobId);
             StreamTracker streamJobTracker = new StreamTracker(
