@@ -8,6 +8,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import com.ad1.loggenerator.model.JobStatus;
 import com.ad1.loggenerator.model.LogMessage;
 import com.ad1.loggenerator.model.StreamTracker;
 
@@ -24,7 +25,7 @@ public class StreamTrackerService {
     /**
      * Seconds before timing out a stream job
      */
-    private final long secondsTimeOut = 60;
+    private final long secondsTimeOut = 10;
     /**
      * Milliseconds to wait between sending data to frontend
      */
@@ -63,10 +64,10 @@ public class StreamTrackerService {
                 sendStreamData(job);
 
                 if (job.getLastPing() + secondsTimeOut < System.currentTimeMillis() / 1000) {
-                    job.setContinueStreaming(false);
+                    job.setStatus(JobStatus.CANCELLED);
                 }
 
-                if (!job.getContinueStreaming()) {
+                if (job.getStatus() != JobStatus.ACTIVE) {
                     setStreamJobToCompleted(job);
                 }
             }
@@ -130,7 +131,7 @@ public class StreamTrackerService {
             return false;
         }
 
-        streamTracker.setContinueStreaming(false);
+        streamTracker.setStatus(JobStatus.COMPLETED);
         return true;
     }
 

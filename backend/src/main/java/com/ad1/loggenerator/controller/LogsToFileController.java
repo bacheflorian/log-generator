@@ -39,7 +39,8 @@ public class LogsToFileController {
                             selectionModel.getBatchSettings().getNumberOfLogs(),
                             System.currentTimeMillis() / 1000,
                             -1,
-                            object
+                            object,
+                            JobStatus.ACTIVE
                     );
             batchService.batchMode(selectionModel, batchJobTracker);
             batchServiceTracker.addNewJob(batchJobTracker);
@@ -64,7 +65,7 @@ public class LogsToFileController {
                     jobId,
                     0,
                     System.currentTimeMillis() / 1000,
-                    true,
+                    JobStatus.ACTIVE,
                     System.currentTimeMillis() / 1000,
                     -1,
                     object

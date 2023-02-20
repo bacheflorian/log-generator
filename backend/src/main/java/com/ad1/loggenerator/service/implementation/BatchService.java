@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import com.ad1.loggenerator.exception.FilePathNotFoundException;
 import com.ad1.loggenerator.model.BatchSettings;
 import com.ad1.loggenerator.model.BatchTracker;
+import com.ad1.loggenerator.model.JobStatus;
 import com.ad1.loggenerator.model.LogMessage;
 import com.ad1.loggenerator.model.SelectionModel;
 
@@ -71,9 +72,16 @@ public class BatchService {
 
             }
                 fileWriter.close();
-            } catch(IOException e){
-                throw new FilePathNotFoundException(e.getMessage());
-            }
+        } catch (IOException e) {
+            // Mark the job as failed if an exception occurred
+            batchJobTracker.setStatus(JobStatus.FAILED);
+            throw new FilePathNotFoundException(e.getMessage());
+        }
+
+        // Mark the job as completed if no exception occurred
+        if (batchJobTracker.getStatus() == JobStatus.ACTIVE) {
+            batchJobTracker.setStatus(JobStatus.COMPLETED);
+        }
     }
 
     public String generateJobId() {

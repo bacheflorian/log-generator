@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.ad1.loggenerator.model.BatchTracker;
+import com.ad1.loggenerator.model.JobStatus;
 import com.ad1.loggenerator.model.LogMessage;
 
 import lombok.Data;
@@ -61,7 +62,9 @@ public class BatchTrackerService {
                 message.setTimeStamp(System.currentTimeMillis());
                 template.convertAndSend(destination + "/" + jobId, message);
 
-                if (job.getLogCount() >= job.getBatchSize()) {
+                // Check if the job has been marked not active to remove it
+                // from the active jobs list
+                if (job.getStatus() != JobStatus.ACTIVE) {
                     setBatchJobToCompleted(job);
                 }
             }
@@ -71,7 +74,7 @@ public class BatchTrackerService {
     }
 
     /**
-     * Utility method to process a batch job tracker as completed
+     * Utility method to process a batch job tracker as not active
      * 
      * @param job The batch job tracker that is completed
      */

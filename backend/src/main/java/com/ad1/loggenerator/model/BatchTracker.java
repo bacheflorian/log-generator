@@ -22,5 +22,7 @@ public class BatchTracker {
     private long endTime;
     //URL of batch object created in aws s3
     private URL batchObjectURL;
+    // The current status of the batch job
+    private JobStatus status;
     
 }

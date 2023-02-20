@@ -13,6 +13,7 @@ import com.ad1.loggenerator.model.AllJobMetrics;
 import com.ad1.loggenerator.model.BatchJobMetrics;
 import com.ad1.loggenerator.model.BatchTracker;
 import com.ad1.loggenerator.model.ContinueMessage;
+import com.ad1.loggenerator.model.JobStatus;
 import com.ad1.loggenerator.model.SelectionModel;
 import com.ad1.loggenerator.model.StreamJobMetrics;
 import com.ad1.loggenerator.model.StreamTracker;
@@ -61,7 +62,8 @@ public class LogController {
                             selectionModel.getBatchSettings().getNumberOfLogs(),
                             System.currentTimeMillis() / 1000,
                             -1,
-                            objectURL
+                            objectURL,
+                            JobStatus.ACTIVE
                     );
             awsbatchService.upLoadBatchLogsToS3(selectionModel, batchJobTracker);
             batchServiceTracker.addNewJob(batchJobTracker);
@@ -93,7 +95,7 @@ public class LogController {
                     jobId,
                     0,
                     System.currentTimeMillis() / 1000,
-                    true,
+                    JobStatus.ACTIVE,
                     System.currentTimeMillis() / 1000,
                     -1,
                     objectURL
@@ -128,7 +130,7 @@ public class LogController {
                     jobId,
                     0,
                     System.currentTimeMillis() / 1000,
-                    true,
+                    JobStatus.ACTIVE,
                     System.currentTimeMillis() / 1000,
                     -1,
                     objectURL

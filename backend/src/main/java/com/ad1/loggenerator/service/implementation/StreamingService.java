@@ -15,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
 import com.ad1.loggenerator.exception.FilePathNotFoundException;
+import com.ad1.loggenerator.model.JobStatus;
 import com.ad1.loggenerator.model.SelectionModel;
 import com.ad1.loggenerator.model.StreamTracker;
 
@@ -63,7 +64,7 @@ public class StreamingService {
         WebClient webClient = WebClient.create(streamAddress);
         String[] errorMessage = {""};
         
-        while (streamJobTracker.getContinueStreaming()) {
+        while (streamJobTracker.getStatus() == JobStatus.ACTIVE) {
             JSONObject logLine = logService.generateLogLine(selectionModel);
 
             // set up post request
@@ -79,13 +80,13 @@ public class StreamingService {
 //                            System.out.println("Successful response: " + res);
                     },
                     error -> {
-                        streamJobTracker.setContinueStreaming(false);
+                        streamJobTracker.setStatus(JobStatus.FAILED);
                         errorMessage[0] = "Error while making the request: " + error;
                     }
             );
 
             // determine if a log lines repeats
-            if (Math.random() < selectionModel.getRepeatingLoglinesPercent() && streamJobTracker.getContinueStreaming()) {
+            if (Math.random() < selectionModel.getRepeatingLoglinesPercent() && streamJobTracker.getStatus() == JobStatus.ACTIVE) {
 
                 // initiate duplicate post request and receive response from address
                 response.subscribe(
@@ -93,7 +94,7 @@ public class StreamingService {
 //                            System.out.println("Successful response: " + res);
                         },
                         error -> {
-                            streamJobTracker.setContinueStreaming(false);
+                            streamJobTracker.setStatus(JobStatus.FAILED);
                             errorMessage[0] = "Error while making the request: " + error;
                         }
                 );
@@ -122,7 +123,7 @@ public class StreamingService {
 
         try {
             FileWriter fileWriter = new FileWriter(filename);
-            while (streamJobTracker.getContinueStreaming()) {
+            while (streamJobTracker.getStatus() == JobStatus.ACTIVE) {
                 
                 JSONObject logLine = logService.generateLogLine(selectionModel);
                 fileWriter.write(logLine.toString() + "\n");
@@ -139,6 +140,8 @@ public class StreamingService {
             fileWriter.close();
 
         } catch (IOException e) {
+            // Mark the job as failed if exception occurred
+            streamJobTracker.setStatus(JobStatus.FAILED);
             throw new FilePathNotFoundException(e.getMessage());
         }
     }

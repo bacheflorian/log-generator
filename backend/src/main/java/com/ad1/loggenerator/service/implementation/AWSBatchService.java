@@ -2,6 +2,7 @@ package com.ad1.loggenerator.service.implementation;
 
 import com.ad1.loggenerator.model.BatchSettings;
 import com.ad1.loggenerator.model.BatchTracker;
+import com.ad1.loggenerator.model.JobStatus;
 import com.ad1.loggenerator.model.SelectionModel;
 import com.ad1.loggenerator.service.AmazonService;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
@@ -70,6 +71,8 @@ public class AWSBatchService{
             s3Client.putObject(bucketName, key, logLines.toString());
 
         } catch(Exception e){
+            // Mark the job as failed if an exception occurred
+            batchJobTracker.setStatus(JobStatus.FAILED);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred while saving log files to aws S3");
         }
         //Make the s3 object public
@@ -80,6 +83,8 @@ public class AWSBatchService{
         // Get the s3 object and count the log lines saved to the bucket object
         S3Object s3Object = s3Client.getObject(bucketName, key);
         batchJobTracker.setLogCount(awsLogService.getLogCount(s3Client, s3Object, bucketName, key));
+        // Mark the job as completed if no exception occurred
+        batchJobTracker.setStatus(JobStatus.COMPLETED);
     }
 
 }
