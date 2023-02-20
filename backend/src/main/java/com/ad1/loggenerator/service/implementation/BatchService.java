@@ -58,17 +58,18 @@ public class BatchService {
             FileWriter fileWriter = new FileWriter(filename);
 
             // add log lines to batch file
-            for (int i = 0; i < batchSettings.getNumberOfLogs(); i++) { // repeat for specified batch size
-                JSONObject logLine = logService.generateLogLine(selectionModel);
-                fileWriter.write(logLine.toString() + "\n");
-                batchJobTracker.setLogCount(batchJobTracker.getLogCount() + 1);
-
-                // determine if a log lines repeats
-                if (Math.random() < selectionModel.getRepeatingLoglinesPercent()) {
+            for (int i = 0; i < batchSettings.getNumberOfLogs() 
+                && batchJobTracker.getStatus() == JobStatus.ACTIVE; i++) { // repeat for specified batch size
+                    JSONObject logLine = logService.generateLogLine(selectionModel);
                     fileWriter.write(logLine.toString() + "\n");
-                    i++;
                     batchJobTracker.setLogCount(batchJobTracker.getLogCount() + 1);
-                }
+
+                    // determine if a log lines repeats
+                    if (Math.random() < selectionModel.getRepeatingLoglinesPercent()) {
+                        fileWriter.write(logLine.toString() + "\n");
+                        i++;
+                        batchJobTracker.setLogCount(batchJobTracker.getLogCount() + 1);
+                    }
 
             }
                 fileWriter.close();

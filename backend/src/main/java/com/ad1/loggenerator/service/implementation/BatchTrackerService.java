@@ -84,6 +84,22 @@ public class BatchTrackerService {
     }
 
     /**
+     * Stop a batch job right away
+     * 
+     * @param jobId the batch job id
+     * @return
+     */
+    public boolean stopBatchJob(String jobId) {
+        BatchTracker batchTracker = activeJobsList.get(jobId);
+        if (batchTracker == null) {
+            return false;
+        }
+
+        batchTracker.setStatus(JobStatus.CANCELLED);
+        return true;
+    }
+
+    /**
      * Add a new batch job to the historyJobsList and activeJobsList
      * 
      * @param batchTracker the new batch job tracker
