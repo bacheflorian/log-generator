@@ -18,9 +18,9 @@ import lombok.Data;
 public class StatisticsUtilitiesService {
     
     @Autowired 
-    private BatchServiceTracker batchServiceTracker;
+    private BatchTrackerService batchServiceTracker;
     @Autowired
-    private StreamServiceTracker streamServiceTracker;
+    private StreamTrackerService streamServiceTracker;
 
     /**
      * Get metrics for all batch and stream jobs

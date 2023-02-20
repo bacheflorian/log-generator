@@ -19,9 +19,9 @@ import java.net.URL;
 public class LogsToFileController {
 
     private final BatchService batchService;
-    private final BatchServiceTracker batchServiceTracker;
+    private final BatchTrackerService batchServiceTracker;
     private final StreamingService streamingService;
-    private final StreamServiceTracker streamServiceTracker;
+    private final StreamTrackerService streamServiceTracker;
 
 
     // general request for generating batch files or streaming

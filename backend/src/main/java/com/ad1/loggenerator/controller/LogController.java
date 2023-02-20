@@ -33,8 +33,8 @@ import java.util.Map;
 @CrossOrigin("http://localhost:3000/")
 public class LogController {
 
-    private final BatchServiceTracker batchServiceTracker;
-    private final StreamServiceTracker streamServiceTracker;
+    private final BatchTrackerService batchServiceTracker;
+    private final StreamTrackerService streamServiceTracker;
     private final StatisticsUtilitiesService statisticsUtilitiesService;
     private final AWSBatchService awsbatchService;
     private final AWSStreamService awsStreamService;

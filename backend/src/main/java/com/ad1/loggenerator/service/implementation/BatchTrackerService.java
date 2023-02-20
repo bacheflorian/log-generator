@@ -18,7 +18,7 @@ import lombok.Data;
  */
 @Data
 @Service
-public class BatchServiceTracker {
+public class BatchTrackerService {
 
     /**
      * Milliseconds to wait between sending data to frontend

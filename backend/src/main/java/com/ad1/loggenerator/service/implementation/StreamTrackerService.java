@@ -19,7 +19,7 @@ import lombok.Data;
  */
 @Data
 @Service
-public class StreamServiceTracker {
+public class StreamTrackerService {
 
     /**
      * Seconds before timing out a stream job
