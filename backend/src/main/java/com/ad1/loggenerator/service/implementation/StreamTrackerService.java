@@ -25,7 +25,7 @@ public class StreamTrackerService {
     /**
      * Seconds before timing out a stream job
      */
-    private final long secondsTimeOut = 10;
+    private final long secondsTimeOut = 30;
     /**
      * Milliseconds to wait between sending data to frontend
      */
