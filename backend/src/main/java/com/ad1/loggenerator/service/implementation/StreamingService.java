@@ -6,20 +6,23 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import java.util.UUID;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Async;
 
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.ad1.loggenerator.exception.FilePathNotFoundException;
+import com.ad1.loggenerator.model.JobStatus;
 import com.ad1.loggenerator.model.SelectionModel;
 import com.ad1.loggenerator.model.StreamTracker;
 
 import lombok.Data;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+
 import reactor.core.publisher.Mono;
 
 /**
@@ -44,7 +47,7 @@ public class StreamingService {
      * @return
      */
     @Async("asyncTaskExecutor")
-    public void streamMode(SelectionModel selectionModel, StreamTracker streamJobTracker) {
+    public void streamMode(SelectionModel selectionModel, StreamTracker streamJobTracker) throws InterruptedException {
 
         // stream to address
         if (!selectionModel.getStreamSettings().getStreamAddress().isEmpty()) {
@@ -56,14 +59,14 @@ public class StreamingService {
         }
     }
 
-    public String streamToAddress(SelectionModel selectionModel, StreamTracker streamJobTracker) {
+    public String streamToAddress(SelectionModel selectionModel, StreamTracker streamJobTracker) throws InterruptedException {
 
         // Setup web client for post request to user specified address
         String streamAddress = selectionModel.getStreamSettings().getStreamAddress();
         WebClient webClient = WebClient.create(streamAddress);
         String[] errorMessage = {""};
         
-        while (streamJobTracker.getContinueStreaming()) {
+        while (streamJobTracker.getStatus() == JobStatus.ACTIVE) {
             JSONObject logLine = logService.generateLogLine(selectionModel);
 
             // set up post request
@@ -76,28 +79,32 @@ public class StreamingService {
             // initiate post request and receive response from address
             response.subscribe(
                     res -> {
+                        streamJobTracker.setLogCount(streamJobTracker.getLogCount() + 1);
 //                            System.out.println("Successful response: " + res);
                     },
                     error -> {
-                        streamJobTracker.setContinueStreaming(false);
+                        streamJobTracker.setStatus(JobStatus.FAILED);
                         errorMessage[0] = "Error while making the request: " + error;
                     }
             );
 
             // determine if a log lines repeats
-            if (Math.random() < selectionModel.getRepeatingLoglinesPercent() && streamJobTracker.getContinueStreaming()) {
+            if (Math.random() < selectionModel.getRepeatingLoglinesPercent() && streamJobTracker.getStatus() == JobStatus.ACTIVE) {
 
                 // initiate duplicate post request and receive response from address
                 response.subscribe(
                         res -> {
+                            streamJobTracker.setLogCount(streamJobTracker.getLogCount() + 1);
 //                            System.out.println("Successful response: " + res);
                         },
                         error -> {
-                            streamJobTracker.setContinueStreaming(false);
+                            streamJobTracker.setStatus(JobStatus.FAILED);
                             errorMessage[0] = "Error while making the request: " + error;
                         }
                 );
             }
+
+            Thread.sleep(1);
         }
 
         if (!errorMessage[0].isEmpty()) {
@@ -122,7 +129,7 @@ public class StreamingService {
 
         try {
             FileWriter fileWriter = new FileWriter(filename);
-            while (streamJobTracker.getContinueStreaming()) {
+            while (streamJobTracker.getStatus() == JobStatus.ACTIVE) {
                 
                 JSONObject logLine = logService.generateLogLine(selectionModel);
                 fileWriter.write(logLine.toString() + "\n");
@@ -139,8 +146,39 @@ public class StreamingService {
             fileWriter.close();
 
         } catch (IOException e) {
+            // Mark the job as failed if exception occurred
+            streamJobTracker.setStatus(JobStatus.FAILED);
             throw new FilePathNotFoundException(e.getMessage());
         }
+    }
+
+    /**
+     * Sends a single post request to specified address and returns
+     * true if the request was successful
+     * 
+     * @param selectionModel
+     * @return
+     */
+    public boolean isAddressAvailable(SelectionModel selectionModel) {
+
+        // Setup web client for post request to user specified address
+        String streamAddress = selectionModel.getStreamSettings().getStreamAddress();
+        WebClient webClient = WebClient.create(streamAddress);
+        JSONObject logLine = logService.generateLogLine(selectionModel);
+
+        try {
+            // set up post request
+            ResponseEntity<String> response = webClient.post()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(logLine)
+                    .retrieve()
+                    .toEntity(String.class)
+                    .block();
+        } catch (WebClientResponseException e) {
+            return false;
+        } 
+
+        return true;
     }
 
     public String generateJobId() {

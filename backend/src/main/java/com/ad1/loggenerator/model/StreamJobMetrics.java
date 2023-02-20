@@ -32,9 +32,9 @@ public class StreamJobMetrics {
      */
     private Long endTime;
     /**
-     * Flag representing if the job has completed
+     * The current status of the batch job
      */
-    private boolean isCompleted;
+    private JobStatus status;
 
     // URL for a particular stream job
     private URL streamObjectURL;

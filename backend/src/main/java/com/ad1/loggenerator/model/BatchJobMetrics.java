@@ -35,12 +35,11 @@ public class BatchJobMetrics {
      * The total batch size
      */
     private int batchSize;
-    /**
-     * Flag representing if th job has completed
-     */
-    private boolean isCompleted;
-
     // URL for a particular batch job
     private URL batchObjectURL;
+    /**
+     * The current status of the batch job
+     */
+    private JobStatus status;
 
 }

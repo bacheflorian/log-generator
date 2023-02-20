@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.ad1.loggenerator.model.AllJobMetrics;
 import com.ad1.loggenerator.model.BatchJobMetrics;
 import com.ad1.loggenerator.model.BatchTracker;
+import com.ad1.loggenerator.model.JobStatus;
 import com.ad1.loggenerator.model.StreamJobMetrics;
 import com.ad1.loggenerator.model.StreamTracker;
 
@@ -18,9 +19,9 @@ import lombok.Data;
 public class StatisticsUtilitiesService {
     
     @Autowired 
-    private BatchServiceTracker batchServiceTracker;
+    private BatchTrackerService batchServiceTracker;
     @Autowired
-    private StreamServiceTracker streamServiceTracker;
+    private StreamTrackerService streamServiceTracker;
 
     /**
      * Get metrics for all batch and stream jobs
@@ -73,18 +74,14 @@ public class StatisticsUtilitiesService {
         batchJobMetrics.setStartTime(batchJob.getStartTime());
         batchJobMetrics.setBatchSize(batchJob.getBatchSize());
         batchJobMetrics.setBatchObjectURL(batchJob.getBatchObjectURL());
+        batchJobMetrics.setStatus(batchJob.getStatus());
 
-        if (batchJob.getLogCount() == 0) {
-            batchJobMetrics.setCompleted(false);
-        }
-        if (batchJob.getLogCount() >= batchJob.getBatchSize()) {
+        if (batchJob.getStatus() != JobStatus.ACTIVE) {
             batchJobMetrics.setEndTime(batchJob.getEndTime());
-            batchJobMetrics.setCompleted(true);
             batchJobMetrics.setRunTime(
                 batchJob.getEndTime() - batchJob.getStartTime());
         } else {
             batchJobMetrics.setEndTime(null);
-            batchJobMetrics.setCompleted(false);
             batchJobMetrics.setRunTime(
                 System.currentTimeMillis() / 1000 - batchJob.getStartTime());
         }
@@ -109,20 +106,13 @@ public class StatisticsUtilitiesService {
         streamJobMetrics.setLogCount(streamJob.getLogCount());
         streamJobMetrics.setStartTime(streamJob.getStartTime());
         streamJobMetrics.setStreamObjectURL(streamJob.getStreamObjectURL());
-   
-        streamJobMetrics.setRunTime(
-            System.currentTimeMillis() / 1000 - streamJob.getStartTime()
-        );
+        streamJobMetrics.setStatus(streamJob.getStatus());
 
-        if (!streamJob.getContinueStreaming()) {
+        if (streamJob.getStatus() != JobStatus.ACTIVE) {
             streamJobMetrics.setEndTime(streamJob.getEndTime());
-            streamJobMetrics.setCompleted(true);
             streamJobMetrics.setRunTime(streamJob.getEndTime() - streamJob.getStartTime());
-            if(streamJob.getLogCount() == 0)
-                streamJobMetrics.setCompleted(false);
         } else {
             streamJobMetrics.setEndTime(null);
-            streamJobMetrics.setCompleted(false);
             streamJobMetrics.setRunTime(
                 System.currentTimeMillis() / 1000 - streamJob.getStartTime()
             );

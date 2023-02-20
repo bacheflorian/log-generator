@@ -13,6 +13,7 @@ import com.ad1.loggenerator.model.AllJobMetrics;
 import com.ad1.loggenerator.model.BatchJobMetrics;
 import com.ad1.loggenerator.model.BatchTracker;
 import com.ad1.loggenerator.model.ContinueMessage;
+import com.ad1.loggenerator.model.JobStatus;
 import com.ad1.loggenerator.model.SelectionModel;
 import com.ad1.loggenerator.model.StreamJobMetrics;
 import com.ad1.loggenerator.model.StreamTracker;
@@ -33,8 +34,8 @@ import java.util.Map;
 @CrossOrigin("http://localhost:3000/")
 public class LogController {
 
-    private final BatchServiceTracker batchServiceTracker;
-    private final StreamServiceTracker streamServiceTracker;
+    private final BatchTrackerService batchServiceTracker;
+    private final StreamTrackerService streamServiceTracker;
     private final StatisticsUtilitiesService statisticsUtilitiesService;
     private final AWSBatchService awsbatchService;
     private final AWSStreamService awsStreamService;
@@ -61,7 +62,8 @@ public class LogController {
                             selectionModel.getBatchSettings().getNumberOfLogs(),
                             System.currentTimeMillis() / 1000,
                             -1,
-                            objectURL
+                            objectURL,
+                            JobStatus.ACTIVE
                     );
             awsbatchService.upLoadBatchLogsToS3(selectionModel, batchJobTracker);
             batchServiceTracker.addNewJob(batchJobTracker);
@@ -93,7 +95,7 @@ public class LogController {
                     jobId,
                     0,
                     System.currentTimeMillis() / 1000,
-                    true,
+                    JobStatus.ACTIVE,
                     System.currentTimeMillis() / 1000,
                     -1,
                     objectURL
@@ -128,7 +130,7 @@ public class LogController {
                     jobId,
                     0,
                     System.currentTimeMillis() / 1000,
-                    true,
+                    JobStatus.ACTIVE,
                     System.currentTimeMillis() / 1000,
                     -1,
                     objectURL
@@ -144,27 +146,38 @@ public class LogController {
         }
     }
 
+    // stop batch request
+    @PostMapping("/batch/stop/{jobId}")
+    public ResponseEntity<String> stopBatchRequest(@PathVariable String jobId) {
+        boolean result = batchServiceTracker.stopBatchJob(jobId);
+        if (result) {
+            return new ResponseEntity<>("Batch job has stopped.", HttpStatus.OK);
+        } else {
+            throw new JobNotFoundException("Job Id not found for " + jobId);
+        }
+    }
+
     // stop streaming request
     @PostMapping("/stream/stop/{jobId}")
-    public ResponseEntity<String> stopRequest(@PathVariable String jobId) {
+    public ResponseEntity<String> stopStreamRequest(@PathVariable String jobId) {
         boolean result = streamServiceTracker.stopStreamJob(jobId);
 
         if (result) {
             return new ResponseEntity<>("Streaming has stopped.", HttpStatus.OK);
         } else {
-            return new ResponseEntity<>("No stream job with that id.", HttpStatus.BAD_REQUEST);
+            throw new JobNotFoundException("Job Id not found for " + jobId);
         }
     }
 
     // continue streaming request via HTTP request
     @PostMapping("/stream/continue/{jobId}")
-    public ResponseEntity<String> continueRequest(@PathVariable String jobId) {
+    public ResponseEntity<String> continueStreamRequest(@PathVariable String jobId) {
         boolean result = streamServiceTracker.continueStreamJob(jobId);
 
         if (result) {
             return new ResponseEntity<>("Streaming will continue.", HttpStatus.OK);
         } else {
-            return new ResponseEntity<>("No stream job with that id.", HttpStatus.BAD_REQUEST);
+            throw new JobNotFoundException("Job Id not found for " + jobId);
         }
     }
 
@@ -175,7 +188,7 @@ public class LogController {
      * @return ContinueMessage with success or failure message
      */
     @MessageMapping("/stream/continue/{jobId}")
-    public ContinueMessage continueRequestSocket(@DestinationVariable String jobId) {
+    public ContinueMessage continueStreamRequestSocket(@DestinationVariable String jobId) {
         boolean result = streamServiceTracker.continueStreamJob(jobId);
 
         if (result) {
