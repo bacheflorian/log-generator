@@ -47,7 +47,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Handles specified exception what a job id is not found
+     * Handles specified exception when a job id is not found
      * @param exception
      * @param webRequest
      * @return error message details
@@ -63,4 +63,20 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
     }
 
+    /**
+     * Handles specified exception when a stream address is not found
+     * @param exception
+     * @param webRequest
+     * @return error message details
+     */
+    @ExceptionHandler(AddressNotFoundException.class)
+    public ResponseEntity<ErrorDetails> handleAddressNotFoundException(AddressNotFoundException exception,
+                                                                   WebRequest webRequest) {
+        ErrorDetails errorDetails = new ErrorDetails(LocalDateTime.now(),
+                exception.getMessage(),
+                webRequest.getDescription(false),
+                "SPECIFIED STREAM ADDRESS NOT FOUND"
+        );
+        return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
+    }
 }
