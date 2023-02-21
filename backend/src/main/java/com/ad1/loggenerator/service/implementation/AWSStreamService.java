@@ -1,5 +1,6 @@
 package com.ad1.loggenerator.service.implementation;
 
+import com.ad1.loggenerator.exception.AWSServiceNotAvailableException;
 import com.ad1.loggenerator.exception.FilePathNotFoundException;
 import com.ad1.loggenerator.model.JobStatus;
 import com.ad1.loggenerator.model.SelectionModel;
@@ -92,7 +93,7 @@ public class AWSStreamService {
         } catch (SdkClientException e) {
             // Mark the job as failed if exception occurred
             streamJobTracker.setStatus(JobStatus.FAILED);
-            throw new FilePathNotFoundException(e.getMessage());
+            throw new AWSServiceNotAvailableException(e.getMessage());
         }
  
         //Make the s3 object public
@@ -148,16 +149,16 @@ public class AWSStreamService {
         } catch (SdkClientException e) {
             // Mark the job as failed if exception occurred
             streamJobTracker.setStatus(JobStatus.FAILED);
-            throw new FilePathNotFoundException(e.getMessage());
+            throw new AWSServiceNotAvailableException(e.getMessage());
         }
         //Make the s3 object public
         s3Client.setObjectAcl(bucketName, key, CannedAccessControlList.PublicRead);
-        // Get the url of the s3 object
+        // Get the url of the s3 object and the s3 object itself
         URL objectURL = s3Client.getUrl(bucketName, key);
-        streamJobTracker.setStreamObjectURL(objectURL);
-        // Get the s3 object and count the log lines saved to the bucket object
         S3Object s3Object = s3Client.getObject(bucketName, key);
+        // Count the log lines saved to the bucket object, set url and the log count to the stream job tracker
         streamJobTracker.setLogCount(awsLogService.getLogCount(s3Client, s3Object, bucketName, key));
+        streamJobTracker.setStreamObjectURL(objectURL);
     }
 
 }
