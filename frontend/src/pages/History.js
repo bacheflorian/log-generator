@@ -28,7 +28,7 @@ function History() {
         <Box m="auto" maxW="75%" pb="1em">
           {displayTable(
             StreamTable,
-            streamJobs.filter(job => job.completed),
+            streamJobs,
             'There are no completed stream jobs currently'
           )}
         </Box>
@@ -40,7 +40,7 @@ function History() {
         <Box m="auto" maxW="75%" pb="5em">
           {displayTable(
             BatchTable,
-            batchJobs.filter(job => job.completed),
+            batchJobs,
             'There are no completed batch jobs currently'
           )}
         </Box>

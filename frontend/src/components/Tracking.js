@@ -30,7 +30,7 @@ const secondsToTimeString = totalSeconds => {
   return time;
 };
 
-function Tracking({ jobID, setJobID, startTime, batchSize }) {
+function Tracking({ jobID, setJobID, startTime, batchMode, batchSize }) {
   const [loading, setLoading] = useBoolean(false);
   const [running, setRunning] = useBoolean(false);
   const [uptime, setUptime] = useState(0);
@@ -162,7 +162,13 @@ function Tracking({ jobID, setJobID, startTime, batchSize }) {
   const handleCancel = () => {
     setLoading.on();
 
-    fetch(process.env.REACT_APP_API_URL + 'generate/stream/stop/' + jobID, {
+    let url = process.env.REACT_APP_API_URL + 'generate/';
+    if (batchMode) {
+      url += 'batch/stop/' + jobID;
+    } else {
+      url += 'stream/stop/' + jobID;
+    }
+    fetch(url, {
       method: 'POST',
     })
       .then(response => {

@@ -30,8 +30,8 @@ function BatchTable({ data }) {
         accessor: 'batchSize',
       },
       {
-        Header: 'Completed',
-        accessor: d => d.completed.toString().toUpperCase(),
+        Header: 'Status',
+        accessor: 'status',
       },
     ],
     []
