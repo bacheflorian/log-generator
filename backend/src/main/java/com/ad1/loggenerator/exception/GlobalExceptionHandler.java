@@ -79,4 +79,20 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
     }
+
+    /**
+     * Handles AWS S3 Service not available exception
+     * @param exception
+     * @param webRequest
+     * @return
+     */
+    @ExceptionHandler(AWSServiceNotAvailableException.class)
+    public ResponseEntity<ErrorDetails> handleAWSServiceNotAvailableException(AWSServiceNotAvailableException exception,
+                                                                    WebRequest webRequest) {
+        ErrorDetails errorDetails = new ErrorDetails(LocalDateTime.now(),
+                exception.getMessage(),
+                webRequest.getDescription(false),
+                "AWS S3 SERVICE NOT AVAILABLE");
+        return new ResponseEntity<>(errorDetails, HttpStatus.SERVICE_UNAVAILABLE);
+    }
 }

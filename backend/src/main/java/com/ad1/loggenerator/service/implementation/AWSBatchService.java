@@ -1,5 +1,6 @@
 package com.ad1.loggenerator.service.implementation;
 
+import com.ad1.loggenerator.exception.AWSServiceNotAvailableException;
 import com.ad1.loggenerator.model.BatchSettings;
 import com.ad1.loggenerator.model.BatchTracker;
 import com.ad1.loggenerator.model.JobStatus;
@@ -73,7 +74,7 @@ public class AWSBatchService{
         } catch(Exception e){
             // Mark the job as failed if an exception occurred
             batchJobTracker.setStatus(JobStatus.FAILED);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error occurred while saving log files to aws S3");
+            throw new AWSServiceNotAvailableException(e.getMessage());
         }
         //Make the s3 object public
         s3Client.setObjectAcl(bucketName, key, CannedAccessControlList.PublicRead);
