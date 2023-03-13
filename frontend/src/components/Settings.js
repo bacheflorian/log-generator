@@ -62,24 +62,18 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
   };
   const FieldSetting = ({ name, fieldName }) => {
     return (
-      <HStack justifyContent="space-between" w="85%">
+      <HStack justifyContent="space-between" w="92%">
         <Field
           as={Checkbox}
-          name={'fieldSettings.include' + fieldName}
+          name={'fieldSettings.' + fieldName + '.include'}
           defaultChecked
         >
           {name}
         </Field>
         <Box w="11em">
-          <Field
-            name={
-              'fieldSettings.fieldValues.' +
-              fieldName.charAt(0).toLowerCase() +
-              fieldName.slice(1)
-            }
-          >
+          <Field name={'fieldSettings.' + fieldName + '.values'}>
             {({ field, meta }) => (
-              <Input {...field} placeholder="randomly generated" h="2.25em" />
+              <Input {...field} placeholder="randomly generated" h="2em" />
             )}
           </Field>
         </Box>
@@ -92,22 +86,13 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
       initialValues={{
         repeatingLoglinesPercent: 0,
         fieldSettings: {
-          includeTimeStamp: true,
-          includeProcessingTime: true,
-          includeCurrentUserID: true,
-          includeBusinessGUID: true,
-          includePathToFile: true,
-          includeFileSHA256: true,
-          includeDisposition: true,
-          fieldValues: {
-            timeStamp: '',
-            processingTime: '',
-            currentUserID: '',
-            businessGUID: '',
-            pathToFile: '',
-            fileSHA256: '',
-            disposition: '',
-          },
+          timeStamp: { include: true, values: '' },
+          processingTime: { include: true, values: '' },
+          currentUserID: { include: true, values: '' },
+          businessGUID: { include: true, values: '' },
+          pathToFile: { include: true, values: '' },
+          fileSHA256: { include: true, values: '' },
+          disposition: { include: true, values: '' },
         },
         malwareSettings: {
           includeTrojan: false,
@@ -133,19 +118,19 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
         // Create a copy of values
         const body = JSON.parse(JSON.stringify(values));
 
-        // split fieldValues
-        Object.keys(body.fieldSettings.fieldValues).forEach(function (key) {
-          const val = body.fieldSettings.fieldValues[key];
+        // split field values
+        Object.keys(body.fieldSettings).forEach(function (key) {
+          const val = body.fieldSettings[key].values;
 
           if (val === '') {
             // if no value is entered, send empty array
-            body.fieldSettings.fieldValues[key] = [];
+            body.fieldSettings[key].values = [];
           } else if (val === ',') {
             // if only a comma entered, send array with a single empty string
-            body.fieldSettings.fieldValues[key] = [''];
+            body.fieldSettings[key].values = [''];
           } else {
             // split string by comma
-            body.fieldSettings.fieldValues[key] = val.split(',');
+            body.fieldSettings[key].values = val.split(',');
           }
         });
 
@@ -194,7 +179,7 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
     >
       {props => (
         <Form>
-          <VStack spacing="1.5em" align="flex-start">
+          <VStack spacing="1.25em" align="flex-start">
             <Field name="repeatingLoglinesPercent">
               {({ field, form }) => (
                 <FormControl isInvalid={form.errors.repeatingLoglinesPercent}>
@@ -222,7 +207,7 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
                 </FormControl>
               )}
             </Field>
-            <FormControl w="30em">
+            <FormControl w="26em">
               <FormLabel mb="0">Field Settings:</FormLabel>
               <FormHelperText mt="0" pb="0.75em">
                 Select fields to include.
@@ -231,24 +216,26 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
                 specified. <br />
                 To provide multiple values separate them with a comma.
               </FormHelperText>
-              <HStack w="60%" justify="space-between" pb="0.75em">
-                <Text fontWeight="500">Fields</Text>
+              <HStack w="63%" justify="space-between" pb="0.75em">
+                <Text fontWeight="500" pl="0.25em">
+                  Fields
+                </Text>
                 <Text fontWeight="500">Values</Text>
               </HStack>
               <VStack spacing="0.5em" align="flex-start">
-                <FieldSetting name="Time stamp" fieldName="TimeStamp" />
+                <FieldSetting name="Time stamp" fieldName="timeStamp" />
                 <FieldSetting
                   name="Processing time"
-                  fieldName="ProcessingTime"
+                  fieldName="processingTime"
                 />
                 <FieldSetting
                   name="Current user ID"
-                  fieldName="CurrentUserID"
+                  fieldName="currentUserID"
                 />
-                <FieldSetting name="Business GUID" fieldName="BusinessGUID" />
-                <FieldSetting name="Path to file" fieldName="PathToFile" />
-                <FieldSetting name="File SHA256" fieldName="FileSHA256" />
-                <FieldSetting name="Disposition" fieldName="Disposition" />
+                <FieldSetting name="Business GUID" fieldName="businessGUID" />
+                <FieldSetting name="Path to file" fieldName="pathToFile" />
+                <FieldSetting name="File SHA256" fieldName="fileSHA256" />
+                <FieldSetting name="Disposition" fieldName="disposition" />
               </VStack>
             </FormControl>
             <FormControl>
