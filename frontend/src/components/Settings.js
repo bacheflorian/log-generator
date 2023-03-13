@@ -1,8 +1,10 @@
 import {
+  Box,
   Button,
   Checkbox,
   FormControl,
   FormErrorMessage,
+  FormHelperText,
   FormLabel,
   HStack,
   Input,
@@ -12,6 +14,7 @@ import {
   NumberInputField,
   Radio,
   RadioGroup,
+  Text,
   VStack,
 } from '@chakra-ui/react';
 import { Field, Form, Formik } from 'formik';
@@ -57,6 +60,32 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
 
     return errors;
   };
+  const FieldSetting = ({ name, fieldName }) => {
+    return (
+      <HStack justifyContent="space-between" w="85%">
+        <Field
+          as={Checkbox}
+          name={'fieldSettings.include' + fieldName}
+          defaultChecked
+        >
+          {name}
+        </Field>
+        <Box w="11em">
+          <Field
+            name={
+              'fieldSettings.fieldValues.' +
+              fieldName.charAt(0).toLowerCase() +
+              fieldName.slice(1)
+            }
+          >
+            {({ field, meta }) => (
+              <Input {...field} placeholder="randomly generated" h="2.25em" />
+            )}
+          </Field>
+        </Box>
+      </HStack>
+    );
+  };
 
   return (
     <Formik
@@ -70,6 +99,15 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
           includePathToFile: true,
           includeFileSHA256: true,
           includeDisposition: true,
+          fieldValues: {
+            timeStamp: '',
+            processingTime: '',
+            currentUserID: '',
+            businessGUID: '',
+            pathToFile: '',
+            fileSHA256: '',
+            disposition: '',
+          },
         },
         malwareSettings: {
           includeTrojan: false,
@@ -92,6 +130,29 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
           values.batchSettings.numberOfLogs
         );
 
+        // Create a copy of values
+        const body = JSON.parse(JSON.stringify(values));
+
+        // split fieldValues
+        Object.keys(body.fieldSettings.fieldValues).forEach(function (key) {
+          const val = body.fieldSettings.fieldValues[key];
+
+          if (val === '') {
+            // if no value is entered, send empty array
+            body.fieldSettings.fieldValues[key] = [];
+          } else if (val === ',') {
+            // if only a comma entered, send array with a single empty string
+            body.fieldSettings.fieldValues[key] = [''];
+          } else {
+            // split string by comma
+            body.fieldSettings.fieldValues[key] = val.split(',');
+          }
+        });
+
+        // log body
+        console.log(JSON.stringify(body, null, 2));
+
+        // request address
         let address = process.env.REACT_APP_API_URL + 'generate/';
         if (values.mode === 'Batch') {
           address = address + 'batch';
@@ -99,14 +160,14 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
           address = address + 'stream';
         }
 
-        //alert(JSON.stringify(values, null, 2));
-        console.log(JSON.stringify(values, null, 2));
+        // request options
         const requestOptions = {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(values),
         };
 
+        // send and handle request
         fetch(address, requestOptions)
           .then(async response => {
             if (response.ok) {
@@ -161,58 +222,33 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
                 </FormControl>
               )}
             </Field>
-            <FormControl>
-              <FormLabel>Include Fields:</FormLabel>
-              <VStack spacing="0.75em" align="flex-start">
-                <Field
-                  as={Checkbox}
-                  name="fieldSettings.includeTimeStamp"
-                  defaultChecked
-                >
-                  Time stamp
-                </Field>
-                <Field
-                  as={Checkbox}
-                  name="fieldSettings.includeProcessingTime"
-                  defaultChecked
-                >
-                  Processing time
-                </Field>
-                <Field
-                  as={Checkbox}
-                  name="fieldSettings.includeCurrentUserID"
-                  defaultChecked
-                >
-                  Current user ID
-                </Field>
-                <Field
-                  as={Checkbox}
-                  name="fieldSettings.includeBusinessGUID"
-                  defaultChecked
-                >
-                  Business GUID
-                </Field>
-                <Field
-                  as={Checkbox}
-                  name="fieldSettings.includePathToFile"
-                  defaultChecked
-                >
-                  Path to file
-                </Field>
-                <Field
-                  as={Checkbox}
-                  name="fieldSettings.includeFileSHA256"
-                  defaultChecked
-                >
-                  File SHA256
-                </Field>
-                <Field
-                  as={Checkbox}
-                  name="fieldSettings.includeDisposition"
-                  defaultChecked
-                >
-                  Disposition
-                </Field>
+            <FormControl w="30em">
+              <FormLabel mb="0">Field Settings:</FormLabel>
+              <FormHelperText mt="0" pb="0.75em">
+                Select fields to include.
+                <br />
+                All fields will be randomly generated unless values are
+                specified. <br />
+                To provide multiple values separate them with a comma.
+              </FormHelperText>
+              <HStack w="60%" justify="space-between" pb="0.75em">
+                <Text fontWeight="500">Fields</Text>
+                <Text fontWeight="500">Values</Text>
+              </HStack>
+              <VStack spacing="0.5em" align="flex-start">
+                <FieldSetting name="Time stamp" fieldName="TimeStamp" />
+                <FieldSetting
+                  name="Processing time"
+                  fieldName="ProcessingTime"
+                />
+                <FieldSetting
+                  name="Current user ID"
+                  fieldName="CurrentUserID"
+                />
+                <FieldSetting name="Business GUID" fieldName="BusinessGUID" />
+                <FieldSetting name="Path to file" fieldName="PathToFile" />
+                <FieldSetting name="File SHA256" fieldName="FileSHA256" />
+                <FieldSetting name="Disposition" fieldName="Disposition" />
               </VStack>
             </FormControl>
             <FormControl>
@@ -270,29 +306,27 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
               </VStack>
             )}
             {props.values.mode === 'Batch' && (
-              <div>
-                <Field name="batchSettings.numberOfLogs">
-                  {({ field, form, meta }) => (
-                    <FormControl
-                      isRequired
-                      isInvalid={meta.touched && meta.error}
-                    >
-                      <FormLabel>Number of Logs</FormLabel>
-                      <InputGroup maxW="10em">
-                        <NumberInput
-                          min={1}
-                          max={1000000000}
-                          precision={0}
-                          onChange={val => form.setFieldValue(field.name, val)}
-                        >
-                          <NumberInputField placeholder="1000" />
-                        </NumberInput>
-                      </InputGroup>
-                      <FormErrorMessage>{meta.error}</FormErrorMessage>
-                    </FormControl>
-                  )}
-                </Field>
-              </div>
+              <Field name="batchSettings.numberOfLogs">
+                {({ field, form, meta }) => (
+                  <FormControl
+                    isRequired
+                    isInvalid={meta.touched && meta.error}
+                  >
+                    <FormLabel>Number of Logs</FormLabel>
+                    <InputGroup maxW="10em">
+                      <NumberInput
+                        min={1}
+                        max={1000000000}
+                        precision={0}
+                        onChange={val => form.setFieldValue(field.name, val)}
+                      >
+                        <NumberInputField placeholder="1000" />
+                      </NumberInput>
+                    </InputGroup>
+                    <FormErrorMessage>{meta.error}</FormErrorMessage>
+                  </FormControl>
+                )}
+              </Field>
             )}
             <Button
               mt={4}
