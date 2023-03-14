@@ -47,19 +47,28 @@ public class AWSStreamService {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream(bufferSize);
 
         try {
+
+            // append [ as the first character
+            buffer.write("[".getBytes());
+
             // generate and write log lines to buffer
             while (streamJobTracker.getStatus() == JobStatus.ACTIVE) {
+
+                // append a delimiter if not the first log line generated
+                if (streamJobTracker.getLogCount() > 0) {
+                    buffer.write(",\n".getBytes());
+                }
+
                 // generate log line
                 JSONObject logLine = logService.generateLogLine(selectionModel);
 
                 // write log line to buffer
                 buffer.write(logLine.toString().getBytes());
-                buffer.write("\n".getBytes());
 
                 // determine if a log line repeats
                 if (Math.random() < selectionModel.getRepeatingLoglinesPercent()) {
+                    buffer.write(",\n".getBytes());
                     buffer.write(logLine.toString().getBytes());
-                    buffer.write("\n".getBytes());
                 }
 
                 // upload buffer to S3 when it is full
@@ -72,6 +81,9 @@ public class AWSStreamService {
                     buffer.reset();
                 }
             }
+
+            // append ] as the final character
+            buffer.write("]".getBytes());
 
             // upload remaining log lines to S3
             if (buffer.size() > 0) {
@@ -113,22 +125,36 @@ public class AWSStreamService {
         // create StringBuilder object to append log lines
         StringBuilder stringBuilder = new StringBuilder();
 
+        // append [ as the first character 
+        stringBuilder.append("[");
+
         try {
             while (streamJobTracker.getStatus() == JobStatus.ACTIVE) {
+
+                // append a delimiter if not the first log line generated
+                if (streamJobTracker.getLogCount() > 0) {
+                    stringBuilder.append(",\n");
+                }
+
                 // generate log line
                 JSONObject logLine = logService.generateLogLine(selectionModel);
 
                 // append log line to StringBuilder
-                stringBuilder.append(logLine.toString()).append(System.lineSeparator());
+                stringBuilder.append(logLine.toString());
 //                streamJobTracker.setLogCount(streamJobTracker.getLogCount() + 1);
 
                 // determine if a log line repeats
                 if (Math.random() < selectionModel.getRepeatingLoglinesPercent()) {
+                    // append a delimiter
+                    stringBuilder.append(",\n");
                     // append repeated log line to StringBuilder
-                    stringBuilder.append(logLine.toString()).append(System.lineSeparator());
+                    stringBuilder.append(logLine.toString());
 //                    streamJobTracker.setLogCount(streamJobTracker.getLogCount() + 1);
                 }
             }
+
+            // append ] as the last character
+            stringBuilder.append("]");
 
             // write StringBuilder content to S3
             byte[] contentAsBytes = stringBuilder.toString().getBytes();
