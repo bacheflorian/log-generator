@@ -13,10 +13,10 @@ public class LogModel {
 
     private long timeStamp;
     private long processingTime;
-    private UUID userId;
-    private UUID businessId;
+    private String userId;
+    private String businessId;
     private String filepath;
-    private UUID fileSHA256;
+    private String fileSHA256;
     private int disposition;
 
 }
