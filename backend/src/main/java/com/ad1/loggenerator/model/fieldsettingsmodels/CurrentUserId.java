@@ -1,5 +1,8 @@
 package com.ad1.loggenerator.model.fieldsettingsmodels;
 
+import java.util.List;
+
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,8 +13,9 @@ import lombok.NoArgsConstructor;
 public class CurrentUserId {
     
     // whether to include the field
-    private boolean include;
+    @NotNull(message="is required")
+    private Boolean include;
     // the optional values to include
-    private String[] values;
+    private List<String> values;
     
 }
