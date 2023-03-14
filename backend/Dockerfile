@@ -1,3 +1,5 @@
+## Instructions for dockerizing: Save, build project and then run command: docker build -t backend .
+
 #### Build the application
 FROM openjdk:18-alpine3.15 as build
 
@@ -11,10 +13,13 @@ COPY .mvn .mvn
 # Copy the pom.xml file
 COPY pom.xml .
 
+# Clean maven project
+RUN ./mvnw clean
+
 # Build all the dependencies in preparation to go offline.
 # This is a separate step so the dependencies will be cached unless
 # the pom.xml file has changed.
-#RUN ./mvnw clean install -DskipTests
+# RUN ./mvnw clean install -DskipTests
 RUN ./mvnw dependency:go-offline -B
 
 # Copy the project source
@@ -28,6 +33,9 @@ RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../*.jar)
 
 #### A minimal docker image with command to run the app
 FROM openjdk:18-alpine3.15
+
+# Add the EXPOSE instructions
+EXPOSE 8080
 
 ARG DEPENDENCY=/app/target/dependency
 
