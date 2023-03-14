@@ -1,5 +1,7 @@
 package com.ad1.loggenerator.model;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,6 +18,7 @@ public class SelectionModel {
     private double repeatingLoglinesPercent;
 
     // field settings
+    @Valid
     private FieldSettings fieldSettings;
 
     // malware settings
