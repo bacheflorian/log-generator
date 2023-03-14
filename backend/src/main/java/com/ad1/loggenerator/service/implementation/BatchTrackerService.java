@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.ad1.loggenerator.model.BatchTracker;
+import com.ad1.loggenerator.model.JobStatus;
 import com.ad1.loggenerator.model.LogMessage;
 
 import lombok.Data;
@@ -18,7 +19,7 @@ import lombok.Data;
  */
 @Data
 @Service
-public class BatchServiceTracker {
+public class BatchTrackerService {
 
     /**
      * Milliseconds to wait between sending data to frontend
@@ -61,7 +62,9 @@ public class BatchServiceTracker {
                 message.setTimeStamp(System.currentTimeMillis());
                 template.convertAndSend(destination + "/" + jobId, message);
 
-                if (job.getLogCount() >= job.getBatchSize()) {
+                // Check if the job has been marked not active to remove it
+                // from the active jobs list
+                if (job.getStatus() != JobStatus.ACTIVE) {
                     setBatchJobToCompleted(job);
                 }
             }
@@ -71,13 +74,29 @@ public class BatchServiceTracker {
     }
 
     /**
-     * Utility method to process a batch job tracker as completed
+     * Utility method to process a batch job tracker as not active
      * 
      * @param job The batch job tracker that is completed
      */
     private void setBatchJobToCompleted(BatchTracker job) {
         activeJobsList.remove(job.getJobId());
         job.setEndTime(System.currentTimeMillis() / 1000);
+    }
+
+    /**
+     * Stop a batch job right away
+     * 
+     * @param jobId the batch job id
+     * @return
+     */
+    public boolean stopBatchJob(String jobId) {
+        BatchTracker batchTracker = activeJobsList.get(jobId);
+        if (batchTracker == null) {
+            return false;
+        }
+
+        batchTracker.setStatus(JobStatus.CANCELLED);
+        return true;
     }
 
     /**

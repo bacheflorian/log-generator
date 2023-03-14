@@ -1,5 +1,6 @@
 package com.ad1.loggenerator.controller;
 
+import com.ad1.loggenerator.exception.AddressNotFoundException;
 import com.ad1.loggenerator.model.*;
 import com.ad1.loggenerator.service.implementation.*;
 import lombok.AllArgsConstructor;
@@ -19,9 +20,9 @@ import java.net.URL;
 public class LogsToFileController {
 
     private final BatchService batchService;
-    private final BatchServiceTracker batchServiceTracker;
+    private final BatchTrackerService batchServiceTracker;
     private final StreamingService streamingService;
-    private final StreamServiceTracker streamServiceTracker;
+    private final StreamTrackerService streamServiceTracker;
 
 
     // general request for generating batch files or streaming
@@ -39,7 +40,8 @@ public class LogsToFileController {
                             selectionModel.getBatchSettings().getNumberOfLogs(),
                             System.currentTimeMillis() / 1000,
                             -1,
-                            object
+                            object,
+                            JobStatus.ACTIVE
                     );
             batchService.batchMode(selectionModel, batchJobTracker);
             batchServiceTracker.addNewJob(batchJobTracker);
@@ -58,13 +60,26 @@ public class LogsToFileController {
             @RequestBody SelectionModel selectionModel) throws InterruptedException {
         URL object = null;
         if (selectionModel.getMode().equals("Stream")) {
+
+            // If a stream address was specified, check the address
+            if (!selectionModel.getStreamSettings().getStreamAddress().isEmpty()) {
+                boolean isAddressAvailable = streamingService.isAddressAvailable(selectionModel);
+                if (!isAddressAvailable) {
+                    throw new AddressNotFoundException("Stream address " +
+                        selectionModel.getStreamSettings().getStreamAddress() +
+                        " is not available."
+                    );
+                    
+                }
+            }
+
             String jobId = streamingService.generateJobId();
             selectionModel.setJobId(jobId);
             StreamTracker streamJobTracker = new StreamTracker(
                     jobId,
                     0,
                     System.currentTimeMillis() / 1000,
-                    true,
+                    JobStatus.ACTIVE,
                     System.currentTimeMillis() / 1000,
                     -1,
                     object

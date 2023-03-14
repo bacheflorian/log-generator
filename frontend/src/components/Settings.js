@@ -17,7 +17,7 @@ import {
 import { Field, Form, Formik } from 'formik';
 import React from 'react';
 
-function Settings({ jobID, setJobID, setBatchSize }) {
+function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
   const validate = values => {
     const errors = {};
 
@@ -108,20 +108,23 @@ function Settings({ jobID, setJobID, setBatchSize }) {
         };
 
         fetch(address, requestOptions)
-          .then(response => {
+          .then(async response => {
             if (response.ok) {
-              return response.text();
-            }
+              const data = await response.text();
 
-            throw Error("Couldn't submit at this time, please try again later");
-          })
-          .then(data => {
-            console.log(data);
-            setJobID(data);
-            if (values.mode === 'Batch') {
-              setBatchSize(values.batchSettings.numberOfLogs);
+              console.log(data);
+              setJobID(data);
+              if (values.mode === 'Batch') {
+                setBatchSize(values.batchSettings.numberOfLogs);
+                setBatchMode(true);
+              } else {
+                setBatchSize(null);
+                setBatchMode(false);
+              }
             } else {
-              setBatchSize(null);
+              const error = await response.json();
+
+              throw Error(error.message);
             }
           })
           .catch(err => alert(err))

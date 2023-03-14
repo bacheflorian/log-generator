@@ -5,6 +5,7 @@ import Tracking from '../components/Tracking';
 
 function Home() {
   const [jobID, setJobID] = useState(null);
+  const [batchMode, setBatchMode] = useState(false);
   const [batchSize, setBatchSize] = useState(null);
 
   return (
@@ -17,6 +18,7 @@ function Home() {
           <Settings
             jobID={jobID}
             setJobID={setJobID}
+            setBatchMode={setBatchMode}
             setBatchSize={setBatchSize}
           />
         </Box>
@@ -25,7 +27,12 @@ function Home() {
           <Heading as="h4" size="sm" ml="-1em" pb="1.5em">
             Status
           </Heading>
-          <Tracking jobID={jobID} setJobID={setJobID} batchSize={batchSize} />
+          <Tracking
+            jobID={jobID}
+            setJobID={setJobID}
+            batchMode={batchMode}
+            batchSize={batchSize}
+          />
         </Box>
       </Flex>
     </div>

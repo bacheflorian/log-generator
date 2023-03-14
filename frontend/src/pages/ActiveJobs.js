@@ -3,15 +3,23 @@ import { React } from 'react';
 import ActiveJob from '../components/ActiveJob';
 import { useJobs } from '../hooks/useJobs';
 
-function displayActiveJobs(jobs, emptyMessage = 'No active jobs currently') {
-  jobs = jobs.filter(job => !job.completed);
+function displayActiveJobs(
+  jobs,
+  batchMode,
+  emptyMessage = 'No active jobs currently'
+) {
+  jobs = jobs.filter(job => job.status === 'ACTIVE');
 
   if (jobs.length > 0) {
     return (
       <Flex wrap="wrap" rowGap="3em" gap="7%">
         {jobs.map(job => (
           <Box minW="20em">
-            <ActiveJob job={job} key={job.jobId.toString()} />
+            <ActiveJob
+              job={job}
+              batchMode={batchMode}
+              key={job.jobId.toString()}
+            />
           </Box>
         ))}
       </Flex>
@@ -33,11 +41,11 @@ function ActiveJobs() {
       <Heading as="h4" size="sm" pb="0.75em" ml="-1em">
         Active Stream Jobs
       </Heading>
-      {streamJobs && displayActiveJobs(streamJobs)}
+      {streamJobs && displayActiveJobs(streamJobs, false)}
       <Heading as="h4" size="sm" pb="0.75em" ml="-1em" mt="4em">
         Batch Jobs
       </Heading>
-      {batchJobs && displayActiveJobs(batchJobs)}
+      {batchJobs && displayActiveJobs(batchJobs, true)}
     </Box>
   );
 }

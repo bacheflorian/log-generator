@@ -25,8 +25,8 @@ function StreamTable({ data }) {
         accessor: 'runTime',
       },
       {
-        Header: 'Completed',
-        accessor: d => d.completed.toString().toUpperCase(),
+        Header: 'Status',
+        accessor: 'status',
       },
     ],
     []

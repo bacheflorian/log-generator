@@ -1,6 +1,8 @@
 package com.ad1.loggenerator.service.implementation;
 
+import com.ad1.loggenerator.exception.AWSServiceNotAvailableException;
 import com.ad1.loggenerator.exception.FilePathNotFoundException;
+import com.ad1.loggenerator.model.JobStatus;
 import com.ad1.loggenerator.model.SelectionModel;
 import com.ad1.loggenerator.model.StreamTracker;
 import com.amazonaws.SdkClientException;
@@ -52,23 +54,35 @@ public class AWSStreamService {
         // create a temporary buffer to store log lines
         ByteArrayOutputStream buffer = new ByteArrayOutputStream(bufferSize);
 
-        // generate and write log lines to buffer
-        while (streamJobTracker.getContinueStreaming()) {
-            // generate log line
-            JSONObject logLine = logService.generateLogLine(selectionModel);
+        try {
+            // generate and write log lines to buffer
+            while (streamJobTracker.getStatus() == JobStatus.ACTIVE) {
+                // generate log line
+                JSONObject logLine = logService.generateLogLine(selectionModel);
 
-            // write log line to buffer
-            buffer.write(logLine.toString().getBytes());
-            buffer.write("\n".getBytes());
-
-            // determine if a log line repeats
-            if (Math.random() < selectionModel.getRepeatingLoglinesPercent()) {
+                // write log line to buffer
                 buffer.write(logLine.toString().getBytes());
                 buffer.write("\n".getBytes());
+
+                // determine if a log line repeats
+                if (Math.random() < selectionModel.getRepeatingLoglinesPercent()) {
+                    buffer.write(logLine.toString().getBytes());
+                    buffer.write("\n".getBytes());
+                }
+
+                // upload buffer to S3 when it is full
+                if (buffer.size() >= bufferSize) {
+                    try (InputStream inputStream = new ByteArrayInputStream(buffer.toByteArray())) {
+                        ObjectMetadata metadata = new ObjectMetadata();
+                        metadata.setContentLength(buffer.size());
+                        s3Client.putObject(bucketName, key, inputStream, metadata);
+                    }
+                    buffer.reset();
+                }
             }
 
-            // upload buffer to S3 when it is full
-            if (buffer.size() >= bufferSize) {
+            // upload remaining log lines to S3
+            if (buffer.size() > 0) {
                 try (InputStream inputStream = new ByteArrayInputStream(buffer.toByteArray())) {
                     ObjectMetadata metadata = new ObjectMetadata();
                     metadata.setContentLength(buffer.size());
@@ -76,17 +90,12 @@ public class AWSStreamService {
                 }
                 buffer.reset();
             }
+        } catch (SdkClientException e) {
+            // Mark the job as failed if exception occurred
+            streamJobTracker.setStatus(JobStatus.FAILED);
+            throw new AWSServiceNotAvailableException(e.getMessage());
         }
-
-        // upload remaining log lines to S3
-        if (buffer.size() > 0) {
-            try (InputStream inputStream = new ByteArrayInputStream(buffer.toByteArray())) {
-                ObjectMetadata metadata = new ObjectMetadata();
-                metadata.setContentLength(buffer.size());
-                s3Client.putObject(bucketName, key, inputStream, metadata);
-            }
-            buffer.reset();
-        }
+ 
         //Make the s3 object public
         s3Client.setObjectAcl(bucketName, key, CannedAccessControlList.PublicRead);
         // Get the url of the s3 object
@@ -113,7 +122,7 @@ public class AWSStreamService {
         StringBuilder stringBuilder = new StringBuilder();
 
         try {
-            while (streamJobTracker.getContinueStreaming()) {
+            while (streamJobTracker.getStatus() == JobStatus.ACTIVE) {
                 // generate log line
                 JSONObject logLine = logService.generateLogLine(selectionModel);
 
@@ -138,16 +147,18 @@ public class AWSStreamService {
             s3Client.putObject(putObjectRequest);
 
         } catch (SdkClientException e) {
-            throw new FilePathNotFoundException(e.getMessage());
+            // Mark the job as failed if exception occurred
+            streamJobTracker.setStatus(JobStatus.FAILED);
+            throw new AWSServiceNotAvailableException(e.getMessage());
         }
         //Make the s3 object public
         s3Client.setObjectAcl(bucketName, key, CannedAccessControlList.PublicRead);
-        // Get the url of the s3 object
+        // Get the url of the s3 object and the s3 object itself
         URL objectURL = s3Client.getUrl(bucketName, key);
-        streamJobTracker.setStreamObjectURL(objectURL);
-        // Get the s3 object and count the log lines saved to the bucket object
         S3Object s3Object = s3Client.getObject(bucketName, key);
+        // Count the log lines saved to the bucket object, set url and the log count to the stream job tracker
         streamJobTracker.setLogCount(awsLogService.getLogCount(s3Client, s3Object, bucketName, key));
+        streamJobTracker.setStreamObjectURL(objectURL);
     }
 
 }
