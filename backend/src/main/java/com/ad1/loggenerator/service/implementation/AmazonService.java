@@ -1,6 +1,6 @@
 package com.ad1.loggenerator.service.implementation;
 
-import com.ad1.loggenerator.service.AmazonService;
+import com.ad1.loggenerator.service.AWSLogService;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
@@ -20,7 +20,7 @@ import java.util.UUID;
 
 @Data
 @Service
-public class AWSLogService implements AmazonService {
+public class AmazonService implements AWSLogService {
     /**
      * Method to create AmazonS3 client
      * @return s3 client

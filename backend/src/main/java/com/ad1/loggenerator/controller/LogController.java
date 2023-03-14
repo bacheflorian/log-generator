@@ -1,5 +1,6 @@
 package com.ad1.loggenerator.controller;
 
+import com.ad1.loggenerator.service.AWSLogService;
 import com.ad1.loggenerator.service.implementation.*;
 import org.json.simple.JSONObject;
 import org.springframework.http.HttpStatus;
@@ -22,8 +23,6 @@ import lombok.AllArgsConstructor;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Receives user requests and returns responses via REST API
@@ -39,7 +38,7 @@ public class LogController {
     private final StatisticsUtilitiesService statisticsUtilitiesService;
     private final AWSBatchService awsbatchService;
     private final AWSStreamService awsStreamService;
-    private final AWSLogService awsLogService;
+    private AWSLogService awsLogService;
 
     /**
      * Method to generate log files in batch mode to AWS s3
