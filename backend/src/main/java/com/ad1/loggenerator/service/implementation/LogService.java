@@ -1,6 +1,7 @@
 package com.ad1.loggenerator.service.implementation;
 
 import java.io.File;
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
@@ -37,40 +38,40 @@ public class LogService {
         JSONObject logLineJSON = new JSONObject();
 
         // Generate log line data
-        if (fieldSettings.getTimeStamp().isInclude()) {
-            long values[] = fieldSettings.getTimeStamp().getValues();
+        if (fieldSettings.getTimeStamp().getInclude()) {
+            List<Long> values = fieldSettings.getTimeStamp().getValues();
             logLine.setTimeStamp(generateTimeStamp(values));
             logLineJSON.put("timeStamp", logLine.getTimeStamp());
         }
-        if (fieldSettings.getProcessingTime().isInclude()) {
-            long values[] = fieldSettings.getProcessingTime().getValues();
+        if (fieldSettings.getProcessingTime().getInclude()) {
+            List<Long> values = fieldSettings.getProcessingTime().getValues();
             logLine.setProcessingTime(generateProcessingTime(values));
             logLineJSON.put("processingTime", logLine.getProcessingTime());
         }
-        if (fieldSettings.getCurrentUserID().isInclude()) {
-            String values[] = fieldSettings.getCurrentUserID().getValues();
+        if (fieldSettings.getCurrentUserID().getInclude()) {
+            List<String> values = fieldSettings.getCurrentUserID().getValues();
             logLine.setUserId(generateUserId(values));
             logLineJSON.put("userId", logLine.getUserId());
         }
-        if (fieldSettings.getBusinessGUID().isInclude()) {
-            String values[] = fieldSettings.getBusinessGUID().getValues();
+        if (fieldSettings.getBusinessGUID().getInclude()) {
+            List<String> values = fieldSettings.getBusinessGUID().getValues();
             logLine.setBusinessId(generateBusinessId(values));
             logLineJSON.put("businessId", logLine.getBusinessId());
         }
 
-        if (fieldSettings.getPathToFile().isInclude()) {
-            String values[] = fieldSettings.getPathToFile().getValues();
+        if (fieldSettings.getPathToFile().getInclude()) {
+            List<String> values = fieldSettings.getPathToFile().getValues();
             logLine.setFilepath(generateFilepath(values));
             logLineJSON.put("filepath", logLine.getFilepath().replace("\\\\", "\\"));
         }
 
-        if (fieldSettings.getFileSHA256().isInclude()) {
-            String values[] = fieldSettings.getFileSHA256().getValues();
+        if (fieldSettings.getFileSHA256().getInclude()) {
+            List<String> values = fieldSettings.getFileSHA256().getValues();
             logLine.setFileSHA256(generateFileSHA256(values));
             logLineJSON.put("fileSHA256", logLine.getFileSHA256());
         }
-        if (fieldSettings.getDisposition().isInclude()) {
-            int values[] = fieldSettings.getDisposition().getValues();
+        if (fieldSettings.getDisposition().getInclude()) {
+            List<Integer> values = fieldSettings.getDisposition().getValues();
             logLine.setDisposition(generateDisposition(values)); // 1 = Clean, 2 = Suspicious, 3 = Malicious, 4 = Unknown
             logLineJSON.put("disposition", logLine.getDisposition());
         }
@@ -85,17 +86,17 @@ public class LogService {
      * 
      * @return a timestamp
      */
-    public long generateTimeStamp(long[] values) {
+    public long generateTimeStamp(List<Long> values) {
         
-        if (values.length == 0) {
+        if (values.size() == 0) {
             // if no value provided, generate random timestamp
             return generateRandomTimeStamp();
         }
 
         // if value provided, select one at random
         Random random = new Random();
-        int randomIndex = random.nextInt(values.length);
-        return values[randomIndex];
+        int randomIndex = random.nextInt(values.size());
+        return values.get(randomIndex);
     }
 
     /**
@@ -112,17 +113,17 @@ public class LogService {
      * 
      * @return processing time in seconds
      */
-    public long generateProcessingTime(long[] values) {
+    public long generateProcessingTime(List<Long> values) {
 
-        if (values.length == 0) {
+        if (values.size() == 0) {
             // if no value provided, generate random processing time
             return generateRandomProcessingTime();
         }
 
         // if value provided, select one at random
         Random random = new Random();
-        int randomIndex = random.nextInt(values.length);
-        return values[randomIndex];
+        int randomIndex = random.nextInt(values.size());
+        return values.get(randomIndex);
     }
 
     /**
@@ -139,17 +140,17 @@ public class LogService {
      * 
      * @return a unique id a user
      */
-    public String generateUserId(String[] values) {
+    public String generateUserId(List<String> values) {
 
-        if (values.length == 0) {
+        if (values.size() == 0) {
             // if no value provided, generate random user id
             return generateRandomUserId();
         }
 
         // if value provided, select one at random
         Random random = new Random();
-        int randomIndex = random.nextInt(values.length);
-        return values[randomIndex];
+        int randomIndex = random.nextInt(values.size());
+        return values.get(randomIndex);
     }
 
     /**
@@ -166,17 +167,17 @@ public class LogService {
      * 
      * @return a unique id for a business
      */
-    public String generateBusinessId(String[] values) {
+    public String generateBusinessId(List<String> values) {
 
-        if (values.length == 0) {
+        if (values.size() == 0) {
             // if no value provided, generate random business id
             return generateRandomBusinessId();
         }
 
         // if value provided, select one at random
         Random random = new Random();
-        int randomIndex = random.nextInt(values.length);
-        return values[randomIndex];
+        int randomIndex = random.nextInt(values.size());
+        return values.get(randomIndex);
     }
 
     /**
@@ -193,17 +194,17 @@ public class LogService {
      * 
      * @return a random filepath
      */
-    public String generateFilepath(String[] values) {
+    public String generateFilepath(List<String> values) {
 
-        if (values.length == 0) {
+        if (values.size() == 0) {
             // if no value provided, generate random file path
             return generateRandomFilepath();
         }
 
         // if value provided, select one at random
         Random random = new Random();
-        int randomIndex = random.nextInt(values.length);
-        return values[randomIndex];
+        int randomIndex = random.nextInt(values.size());
+        return values.get(randomIndex);
     }
 
     /**
@@ -236,17 +237,17 @@ public class LogService {
      * 
      * @return a file SHA256
      */
-    public String generateFileSHA256(String[] values) {
+    public String generateFileSHA256(List<String> values) {
 
-        if (values.length == 0) {
+        if (values.size() == 0) {
             // if no value provided, generate random file sha256
             return generateRandomFileSHA256();
         }
 
         // if value provided, select one at random
         Random random = new Random();
-        int randomIndex = random.nextInt(values.length);
-        return values[randomIndex];
+        int randomIndex = random.nextInt(values.size());
+        return values.get(randomIndex);
     }
 
     /**
@@ -263,17 +264,17 @@ public class LogService {
      * 
      * @return a disposition
      */
-    public int generateDisposition(int[] values) {
+    public int generateDisposition(List<Integer> values) {
 
-        if (values.length == 0) {
+        if (values.size() == 0) {
             // if no value provided, generate random disposition
             return generateRandomDisposition();
         }
 
         // if value provided, select one at random
         Random random = new Random();
-        int randomIndex = random.nextInt(values.length);
-        return values[randomIndex];
+        int randomIndex = random.nextInt(values.size());
+        return values.get(randomIndex);
     }
 
     /**
