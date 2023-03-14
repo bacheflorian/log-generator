@@ -1,16 +1,11 @@
 package com.ad1.loggenerator.service.implementation;
 
 import com.ad1.loggenerator.exception.AWSServiceNotAvailableException;
-import com.ad1.loggenerator.exception.FilePathNotFoundException;
 import com.ad1.loggenerator.model.JobStatus;
 import com.ad1.loggenerator.model.SelectionModel;
 import com.ad1.loggenerator.model.StreamTracker;
 import com.amazonaws.SdkClientException;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,9 +17,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.net.URL;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.UUID;
 
 @Data
 @AllArgsConstructor
@@ -35,7 +27,7 @@ public class AWSStreamService {
     @Autowired
     private LogService logService;
     @Autowired
-    private AWSLogService awsLogService;
+    private AmazonService awsLogService;
 
     @Async("asyncTaskExecutor")
     public void streamToS3Buffer(SelectionModel selectionModel, StreamTracker streamJobTracker) throws IOException {
