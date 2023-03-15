@@ -16,6 +16,7 @@ public class PathToFile {
     @NotNull(message="is required")
     private Boolean include;
     // the optional values to include
+    @NotNull
     private List<String> values;
 
 }

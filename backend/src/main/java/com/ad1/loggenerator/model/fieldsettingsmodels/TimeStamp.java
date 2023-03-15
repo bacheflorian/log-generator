@@ -16,6 +16,7 @@ public class TimeStamp {
     @NotNull(message="is required")
     private Boolean include;
     // the optional values to include
+    @NotNull
     private List<Long> values;
 
 }
