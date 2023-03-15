@@ -16,7 +16,7 @@ import java.net.URL;
 @AllArgsConstructor
 @RestController
 @RequestMapping("/api/v1/generate")
-@CrossOrigin("http://localhost:3000/")
+@CrossOrigin("http://ec2-35-88-70-191.us-west-2.compute.amazonaws.com/")
 public class LogsToFileController {
 
     private final BatchService batchService;
