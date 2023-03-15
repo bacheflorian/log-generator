@@ -2,6 +2,9 @@ package com.ad1.loggenerator.controller;
 
 import com.ad1.loggenerator.service.AWSLogService;
 import com.ad1.loggenerator.service.implementation.*;
+
+import jakarta.validation.Valid;
+
 import org.json.simple.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,7 +51,7 @@ public class LogController {
      */
     @PostMapping("/batch/s3")
     public ResponseEntity<String> generateBatchRequestToS3(
-            @RequestBody SelectionModel selectionModel) throws InterruptedException, IOException {
+            @Valid @RequestBody SelectionModel selectionModel) throws InterruptedException, IOException {
 
         if (selectionModel.getMode().equals("Batch")) {
             String jobId = awsLogService.generateJobId();
@@ -84,7 +87,7 @@ public class LogController {
      */
     @PostMapping("/stream/s3")
     public ResponseEntity<String> generateStreamRequestToS3(
-            @RequestBody SelectionModel selectionModel) throws InterruptedException, IOException {
+            @Valid @RequestBody SelectionModel selectionModel) throws InterruptedException, IOException {
 
         if (selectionModel.getMode().equals("Stream")) {
             String jobId = awsLogService.generateJobId();
@@ -119,7 +122,7 @@ public class LogController {
      */
     @PostMapping("/stream/s3/Buffer")
     public ResponseEntity<String> generateStreamRequestToS3Buffer(
-            @RequestBody SelectionModel selectionModel) throws InterruptedException, IOException {
+            @Valid @RequestBody SelectionModel selectionModel) throws InterruptedException, IOException {
 
         if (selectionModel.getMode().equals("Stream")) {
             String jobId = awsLogService.generateJobId();
