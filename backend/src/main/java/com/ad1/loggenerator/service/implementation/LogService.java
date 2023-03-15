@@ -96,8 +96,8 @@ public class LogService {
      * 
      * @return a unique id a user
      */
-    public UUID generateUserId() {
-        return UUID.randomUUID();
+    public String generateUserId() {
+        return UUID.randomUUID().toString();
     }
 
     /**
@@ -105,8 +105,8 @@ public class LogService {
      * 
      * @return a unique id for a business
      */
-    public UUID generateBusinessId() {
-        return UUID.randomUUID();
+    public String generateBusinessId() {
+        return UUID.randomUUID().toString();
     }
 
     /**
@@ -139,8 +139,8 @@ public class LogService {
      * 
      * @return a file SHA256
      */
-    public UUID generateFileSHA256() {
-        return UUID.randomUUID();
+    public String generateFileSHA256() {
+        return UUID.randomUUID().toString();
     }
 
     /**

@@ -8,7 +8,6 @@ import java.util.UUID;
 
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +15,6 @@ import com.ad1.loggenerator.exception.FilePathNotFoundException;
 import com.ad1.loggenerator.model.BatchSettings;
 import com.ad1.loggenerator.model.BatchTracker;
 import com.ad1.loggenerator.model.JobStatus;
-import com.ad1.loggenerator.model.LogMessage;
 import com.ad1.loggenerator.model.SelectionModel;
 
 import lombok.Data;
@@ -57,22 +55,39 @@ public class BatchService {
             String filename = "C:\\log-generator\\batch\\" + timestamp + ".json";
             FileWriter fileWriter = new FileWriter(filename);
 
+            // write a [ to begin the log file
+            fileWriter.write("[");
+
             // add log lines to batch file
             for (int i = 0; i < batchSettings.getNumberOfLogs() 
                 && batchJobTracker.getStatus() == JobStatus.ACTIVE; i++) { // repeat for specified batch size
+
+                    // add a delimiter if it's not the first log line written
+                    if (i > 0) {
+                        fileWriter.write(",\n");
+                    }
+
                     JSONObject logLine = logService.generateLogLine(selectionModel);
-                    fileWriter.write(logLine.toString() + "\n");
+                    fileWriter.write(logLine.toString());
                     batchJobTracker.setLogCount(batchJobTracker.getLogCount() + 1);
 
                     // determine if a log lines repeats
                     if (Math.random() < selectionModel.getRepeatingLoglinesPercent()) {
-                        fileWriter.write(logLine.toString() + "\n");
+                        
+                        // add a delimiter
+                        fileWriter.write(",\n");
+                        // write the log line
+                        fileWriter.write(logLine.toString());
                         i++;
                         batchJobTracker.setLogCount(batchJobTracker.getLogCount() + 1);
                     }
 
             }
-                fileWriter.close();
+
+            // write a ] to end the log file
+            fileWriter.write("]");
+
+            fileWriter.close();
         } catch (IOException e) {
             // Mark the job as failed if an exception occurred
             batchJobTracker.setStatus(JobStatus.FAILED);

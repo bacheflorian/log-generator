@@ -47,17 +47,30 @@ public class AWSBatchService{
             BatchSettings batchSettings = selectionModel.getBatchSettings();
             // Add log lines to a StringBuilder
             StringBuilder logLines = new StringBuilder();
+            // append [ as the first character
+            logLines.append("[");
+
             for (int i = 0; i < batchSettings.getNumberOfLogs(); i++) {
+
+                if (i > 0) {
+                    // add a delimiter if not the first log line generated
+                    logLines.append(",\n");
+                }
+
                 JSONObject logLine = logService.generateLogLine(selectionModel);
-                logLines.append(logLine.toString() + "\n");
+                logLines.append(logLine.toString());
 
                 // determine if a log lines repeats
                 if (Math.random() < selectionModel.getRepeatingLoglinesPercent()) {
-                    logLines.append(logLine.toString() + "\n");
+                    logLines.append(",\n");
+                    logLines.append(logLine.toString());
                     i++;
 //                    batchJobTracker.setLogCount(batchJobTracker.getLogCount() + 1);
                 }
             }
+
+            // append ] as the last character
+            logLines.append("]");
             // Upload the batch file to S3
             s3Client.putObject(bucketName, key, logLines.toString());
 
