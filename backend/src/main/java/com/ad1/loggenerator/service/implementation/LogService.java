@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.json.simple.JSONObject;
 import org.springframework.stereotype.Service;
 
+import com.ad1.loggenerator.model.CustomLog;
 import com.ad1.loggenerator.model.FieldSettings;
 import com.ad1.loggenerator.model.LogModel;
 import com.ad1.loggenerator.model.SelectionModel;
@@ -58,13 +59,11 @@ public class LogService {
             logLine.setBusinessId(generateBusinessId(values));
             logLineJSON.put("businessId", logLine.getBusinessId());
         }
-
         if (fieldSettings.getPathToFile().getInclude()) {
             List<String> values = fieldSettings.getPathToFile().getValues();
             logLine.setFilepath(generateFilepath(values));
             logLineJSON.put("filepath", logLine.getFilepath().replace("\\\\", "\\"));
         }
-
         if (fieldSettings.getFileSHA256().getInclude()) {
             List<String> values = fieldSettings.getFileSHA256().getValues();
             logLine.setFileSHA256(generateFileSHA256(values));
@@ -76,9 +75,92 @@ public class LogService {
             logLineJSON.put("disposition", logLine.getDisposition());
         }
 
+        List<CustomLog> customLogs = selectionModel.getCustomLogs();
+
+        if (customLogs.size() == 0) {
+            return logLineJSON;
+        }
+
+        CustomLog customLog = chooseCustomLog(customLogs);
+
+        if (customLog == null) {
+            // get one of the custom logs to add their fields to the log line
+            // that don't exist on the log line as null
+            addNullCustomLogFields(logLineJSON, customLogs.get(0));
+        } else {
+            // add the fields from the custom log to the log line, overwriting
+            // any of the randomly generated fields
+            addCustomLogFields(logLineJSON, customLog);
+        }
+
         // additional code required for malware
 
         return logLineJSON;
+    }
+
+    /**
+     * This method takes the fields in the custom log and adds them to the log
+     * line generated. If the custom log has a field that is part of our model,
+     * it will overwrite the randomly generated value
+     * 
+     * @param logLineJSON
+     * @param customLog
+     */
+    private void addCustomLogFields(JSONObject logLineJSON, CustomLog customLog) {
+
+        for (String key: customLog.getFields().keySet()) {
+            logLineJSON.put(key, customLog.getFields().get(key));
+        }
+
+    }
+
+    /**
+     * This method will take the fields in the custom log and add fields that
+     * do not currently exist in the generated log with a value of null
+     * 
+     * @param logLineJSON
+     * @param customLog
+     */
+    private void addNullCustomLogFields(JSONObject logLineJSON, CustomLog customLog) {
+        
+        for (String key: customLog.getFields().keySet()) {
+
+            if (!logLineJSON.containsKey(key)) {
+                // If the generated log does not have the field yet, add it
+                logLineJSON.put(key, null);
+            }
+        }
+
+    }
+
+    /**
+     * Randomly choose a custom log to generate. The frequencies in the List 
+     * must total <= 1.00. This method also returns null when a custom log
+     * is not selected and a random log should be generated
+     * 
+     * @param customLogs
+     * @return
+     */
+    private CustomLog chooseCustomLog(List<CustomLog> customLogs) {
+        
+        // get a random value
+        Random random = new Random();
+        double randomDouble = random.nextDouble(1);
+
+        double lower = 0;
+        double upper = 0;
+        for (CustomLog customLog: customLogs) {
+            upper += customLog.getFrequency();
+            
+            // return the custom log chosen
+            if (randomDouble <= upper && randomDouble > lower) {
+                return customLog;
+            }
+            lower = upper;
+        }
+
+        // return null if no custom log chosen
+        return null;
     }
 
     /**
