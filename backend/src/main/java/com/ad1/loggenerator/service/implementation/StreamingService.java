@@ -65,6 +65,9 @@ public class StreamingService {
         String streamAddress = selectionModel.getStreamSettings().getStreamAddress();
         WebClient webClient = WebClient.create(streamAddress);
         String[] errorMessage = {""};
+
+        // remove fields that should not be included in custom logs
+        logService.removeExcludedFields(selectionModel.getCustomLogs(), selectionModel);
         
         while (streamJobTracker.getStatus() == JobStatus.ACTIVE) {
             JSONObject logLine = logService.generateLogLine(selectionModel);
@@ -126,6 +129,9 @@ public class StreamingService {
 
         // specify filepath location for stream file
         String filename = "C:\\log-generator\\stream\\" + timestamp + ".json";
+
+        // remove fields that should not be included in custom logs
+        logService.removeExcludedFields(selectionModel.getCustomLogs(), selectionModel);
 
         try {
             FileWriter fileWriter = new FileWriter(filename);

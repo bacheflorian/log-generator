@@ -55,6 +55,9 @@ public class BatchService {
             String filename = "C:\\log-generator\\batch\\" + timestamp + ".json";
             FileWriter fileWriter = new FileWriter(filename);
 
+            // remove fields that should not be included in custom logs
+            logService.removeExcludedFields(selectionModel.getCustomLogs(), selectionModel);
+
             // write a [ to begin the log file
             fileWriter.write("[");
 
