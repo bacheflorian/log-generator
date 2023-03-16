@@ -77,11 +77,12 @@ public class LogService {
 
         List<CustomLog> customLogs = selectionModel.getCustomLogs();
 
+        // choose a random custom log based on frequency
+        CustomLog customLog = chooseCustomLog(customLogs);
+
         if (customLogs.size() == 0) {
             return logLineJSON;
         }
-
-        CustomLog customLog = chooseCustomLog(customLogs);
 
         if (customLog == null) {
             // get one of the custom logs to add their fields to the log line
@@ -96,6 +97,48 @@ public class LogService {
         // additional code required for malware
 
         return logLineJSON;
+    }
+
+    /**
+     * Removes the fields that should not be included in the custom logs
+     * 
+     * @param customLogs
+     * @param selectionModel
+     */
+    public void removeExcludedFields(List<CustomLog> customLogs, SelectionModel selectionModel) {
+
+        FieldSettings fieldSettings = selectionModel.getFieldSettings();
+
+        for (CustomLog customLog: customLogs) {
+            if (customLog.getFields().containsKey("timeStamp")
+                        && !fieldSettings.getTimeStamp().getInclude()) {
+                customLog.getFields().remove("timeStamp");
+            }
+            if (customLog.getFields().containsKey("processingTime")
+                        && !fieldSettings.getProcessingTime().getInclude()) {
+                customLog.getFields().remove("processingTime");
+            }
+            if (customLog.getFields().containsKey("userId")
+                        && !fieldSettings.getCurrentUserID().getInclude()) {
+                customLog.getFields().remove("userId");
+            }
+            if (customLog.getFields().containsKey("businessId")
+                        && !fieldSettings.getBusinessGUID().getInclude()) {
+                customLog.getFields().remove("businessId");
+            }
+            if (customLog.getFields().containsKey("filepath")
+                        && !fieldSettings.getPathToFile().getInclude()) {
+                customLog.getFields().remove("filepath");
+            }
+            if (customLog.getFields().containsKey("fileSHA256")
+                        && !fieldSettings.getFileSHA256().getInclude()) {
+                customLog.getFields().remove("fileSHA256");
+            }
+            if (customLog.getFields().containsKey("disposition")
+                        && !fieldSettings.getDisposition().getInclude()) {
+                customLog.getFields().remove("disposition");
+            }
+        }
     }
 
     /**
