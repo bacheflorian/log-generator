@@ -34,6 +34,10 @@ public class AWSStreamService {
         // specify the s3 bucket and key for the log file
         String bucketName = "stream-s3-log-generator";
         String key = "stream/" + awsLogService.createCurrentTimeDate() + ".json";
+
+        // remove fields that should not be included in custom logs
+        logService.removeExcludedFields(selectionModel.getCustomLogs(), selectionModel);
+
         // create s3 client instance
         AmazonS3 s3Client = awsLogService.createS3Client();
 
@@ -112,6 +116,9 @@ public class AWSStreamService {
         // specify the s3 bucket and key for the log file
         String bucketName = "stream-s3-log-generator";
         String key = "stream/" + awsLogService.createCurrentTimeDate() + ".json";
+
+        // remove fields that should not be included in custom logs
+        logService.removeExcludedFields(selectionModel.getCustomLogs(), selectionModel);
 
         // create s3 client instance
         AmazonS3 s3Client = awsLogService.createS3Client();

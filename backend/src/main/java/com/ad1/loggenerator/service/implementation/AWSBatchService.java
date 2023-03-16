@@ -42,6 +42,9 @@ public class AWSBatchService{
         String key = "batch/" + awsLogService.createCurrentTimeDate() + ".json";
         AmazonS3 s3Client = awsLogService.createS3Client();
 
+        // remove fields that should not be included in custom logs
+        logService.removeExcludedFields(selectionModel.getCustomLogs(), selectionModel);
+
         try {
             // batch settings
             BatchSettings batchSettings = selectionModel.getBatchSettings();
