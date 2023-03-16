@@ -45,51 +45,48 @@ public class AWSStreamService {
 
         // create a temporary buffer to store log lines
         ByteArrayOutputStream buffer = new ByteArrayOutputStream(bufferSize);
+        // keep track of the number of log lines written to the buffer
+        int numLogLines = 0;
 
         try {
-
-            // append [ as the first character
-            buffer.write("[".getBytes());
-
             // generate and write log lines to buffer
             while (streamJobTracker.getStatus() == JobStatus.ACTIVE) {
 
-                // append a delimiter if not the first log line generated
-                if (streamJobTracker.getLogCount() > 0) {
-                    buffer.write(",\n".getBytes());
-                }
-
                 // generate log line
                 JSONObject logLine = logService.generateLogLine(selectionModel);
-
+                // add a comma before log line if it's not the first one
+                if (numLogLines > 0) {
+                    buffer.write(",\n".getBytes());
+                }
                 // write log line to buffer
                 buffer.write(logLine.toString().getBytes());
 
                 // determine if a log line repeats
                 if (Math.random() < selectionModel.getRepeatingLoglinesPercent()) {
-                    buffer.write(",\n".getBytes());
+                    if (numLogLines > 0) {
+                        buffer.write(",\n".getBytes());
+                    }
                     buffer.write(logLine.toString().getBytes());
                 }
+                numLogLines++;
 
                 // upload buffer to S3 when it is full
                 if (buffer.size() >= bufferSize) {
-                    try (InputStream inputStream = new ByteArrayInputStream(buffer.toByteArray())) {
+                    try (InputStream inputStream = new ByteArrayInputStream(("[" + buffer.toString() + "]").getBytes())) {
                         ObjectMetadata metadata = new ObjectMetadata();
-                        metadata.setContentLength(buffer.size());
+                        metadata.setContentLength(buffer.size() + 2);
                         s3Client.putObject(bucketName, key, inputStream, metadata);
                     }
                     buffer.reset();
+                    numLogLines = 0;
                 }
             }
 
-            // append ] as the final character
-            buffer.write("]".getBytes());
-
             // upload remaining log lines to S3
             if (buffer.size() > 0) {
-                try (InputStream inputStream = new ByteArrayInputStream(buffer.toByteArray())) {
+                try (InputStream inputStream = new ByteArrayInputStream(("[" + buffer.toString() + "]").getBytes())) {
                     ObjectMetadata metadata = new ObjectMetadata();
-                    metadata.setContentLength(buffer.size());
+                    metadata.setContentLength(buffer.size() + 2);
                     s3Client.putObject(bucketName, key, inputStream, metadata);
                 }
                 buffer.reset();
@@ -102,11 +99,11 @@ public class AWSStreamService {
  
         //Make the s3 object public
         s3Client.setObjectAcl(bucketName, key, CannedAccessControlList.PublicRead);
-        // Get the url of the s3 object
+        // Get the url of the s3 object and the s3 object
         URL objectURL = s3Client.getUrl(bucketName, key);
-        streamJobTracker.setStreamObjectURL(objectURL);
-        // Get the s3 object and count the log lines saved to the bucket object
         S3Object s3Object = s3Client.getObject(bucketName, key);
+        // Set the url of the s3 object and count of the log lines saved to the bucket object to StreamJobTracker
+        streamJobTracker.setStreamObjectURL(objectURL);
         streamJobTracker.setLogCount(awsLogService.getLogCount(s3Client, s3Object, bucketName, key));
     }
 
@@ -124,15 +121,14 @@ public class AWSStreamService {
 
         // create StringBuilder object to append log lines
         StringBuilder stringBuilder = new StringBuilder();
-
-        // append [ as the first character 
-        stringBuilder.append("[");
+        // keep track of the number of log lines written to the stringBuilder
+        int numLogLines = 0;
 
         try {
             while (streamJobTracker.getStatus() == JobStatus.ACTIVE) {
 
                 // append a delimiter if not the first log line generated
-                if (streamJobTracker.getLogCount() > 0) {
+                if (numLogLines > 0) {
                     stringBuilder.append(",\n");
                 }
 
@@ -146,18 +142,18 @@ public class AWSStreamService {
                 // determine if a log line repeats
                 if (Math.random() < selectionModel.getRepeatingLoglinesPercent()) {
                     // append a delimiter
-                    stringBuilder.append(",\n");
+                    if (numLogLines > 0) {
+                        stringBuilder.append(",\n");
+                    }
                     // append repeated log line to StringBuilder
                     stringBuilder.append(logLine.toString());
 //                    streamJobTracker.setLogCount(streamJobTracker.getLogCount() + 1);
                 }
+                numLogLines++;
             }
 
-            // append ] as the last character
-            stringBuilder.append("]");
-
             // write StringBuilder content to S3
-            byte[] contentAsBytes = stringBuilder.toString().getBytes();
+            byte[] contentAsBytes = ("[" + stringBuilder.toString() + "]").getBytes();
             ObjectMetadata metadata = new ObjectMetadata();
             metadata.setContentLength(contentAsBytes.length);
             ByteArrayInputStream inputStream = new ByteArrayInputStream(contentAsBytes);
