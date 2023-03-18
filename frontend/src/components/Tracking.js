@@ -68,7 +68,7 @@ function Tracking({ jobID, setJobID, startTime, batchMode, batchSize }) {
 
     // connect to socket
     let stompClient = Stomp.over(
-      () => new SockJS('http://localhost:8080/websocket-batch-service')
+      () => new SockJS(process.env.REACT_APP_SOCKET_URL)
     );
     stompClient.debug = () => {}; //disables stomp debug console logs
     stompClient.connect({}, function (frame) {
