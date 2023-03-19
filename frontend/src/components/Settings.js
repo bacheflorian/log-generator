@@ -1,4 +1,4 @@
-import { AddIcon } from '@chakra-ui/icons';
+import { AddIcon, InfoIcon, SmallCloseIcon } from '@chakra-ui/icons';
 import {
   Box,
   Button,
@@ -6,7 +6,6 @@ import {
   Divider,
   FormControl,
   FormErrorMessage,
-  FormHelperText,
   FormLabel,
   HStack,
   IconButton,
@@ -25,6 +24,7 @@ import {
   Radio,
   RadioGroup,
   Text,
+  Tooltip,
   useDisclosure,
   VStack,
   Wrap,
@@ -174,11 +174,13 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
         });
 
         // custom logs
-        // filter empty fields
+        // filter empty fields and remove id
         body.customLogs.forEach(function (customLog) {
           Object.keys(customLog.fields).forEach(
             key => customLog.fields[key] === '' && delete customLog.fields[key]
           );
+
+          delete customLog.id;
         });
 
         // filter customLogs with no fields provided
@@ -231,7 +233,7 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
     >
       {props => (
         <Form>
-          <VStack spacing="1em" align="flex-start">
+          <VStack spacing="1.1em" align="flex-start">
             <Field name="repeatingLoglinesPercent">
               {({ field, form }) => (
                 <FormControl isInvalid={form.errors.repeatingLoglinesPercent}>
@@ -261,20 +263,23 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
             </Field>
             <FormControl w="26em">
               <FormLabel mb="0">Field Settings:</FormLabel>
-              <FormHelperText mt="0" pb="0.75em">
-                Select fields to include.
-                <br />
-                All fields will be randomly generated unless values are
-                specified. <br />
-                To provide multiple values separate them with a comma.
-              </FormHelperText>
-              <HStack w="63%" justify="space-between" pb="0.75em">
-                <Text fontWeight="500" pl="0.25em">
-                  Fields
-                </Text>
-                <Text fontWeight="500">Values</Text>
+              <HStack w="67%" justify="space-between" pt="0.25em" pb="0.25em">
+                <Tooltip label="Select fields to include" placement="right">
+                  <Text fontWeight="500" pl="0.25em">
+                    Fields
+                  </Text>
+                </Tooltip>
+                <Tooltip
+                  label="All fields will be randomly generated unless values are specified. To provide multiple values separate them with a comma."
+                  placement="top-start"
+                >
+                  <HStack>
+                    <Text fontWeight="500">Values</Text>
+                    <InfoIcon boxSize={3} />
+                  </HStack>
+                </Tooltip>
               </HStack>
-              <VStack spacing="0.3em" align="flex-start">
+              <VStack spacing="0.4em" align="flex-start">
                 <FieldSetting name="Time stamp" fieldName="timeStamp" />
                 <FieldSetting
                   name="Processing time"
@@ -318,75 +323,90 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
                       <ModalBody>
                         <VStack align="start">
                           {field.value.map((log, index) => (
-                            <Wrap
-                              spacingX="1em"
-                              spacingY="0.5em"
-                              key={index}
-                              gap="1em"
-                              pt="0.5em"
-                            >
-                              <WrapItem>
-                                <HStack>
-                                  <Text>frequency:</Text>
-                                  <FormControl isInvalid={meta.error}>
-                                    <InputGroup maxW="8em">
-                                      <NumberInput
-                                        min={0}
-                                        max={1}
-                                        value={log.frequency}
-                                        onChange={val =>
-                                          form.setFieldValue(
-                                            `customLogs.${index}.frequency`,
-                                            val
-                                          )
-                                        }
-                                      >
-                                        <NumberInputField
-                                          h="2em"
-                                          w="6em"
-                                          placeholder="0"
-                                        />
-                                      </NumberInput>
-                                    </InputGroup>
-                                  </FormControl>
-                                </HStack>
-                              </WrapItem>
-                              {Object.keys(log.fields).map(keyName => (
-                                <WrapItem key={`${index}.${keyName}`}>
-                                  <HStack>
-                                    <Text>{keyName}:</Text>
-                                    <FormControl>
-                                      <Input
-                                        defaultValue={log.fields[keyName]}
-                                        //change values onBlur to improve rendering performance
-                                        onBlur={event =>
-                                          form.setFieldValue(
-                                            `customLogs.${index}.fields.${keyName}`,
-                                            event.target.value
-                                          )
-                                        }
-                                        placeholder="random"
-                                        h="2em"
-                                        w="8em"
-                                      />
-                                    </FormControl>
-                                  </HStack>
-                                </WrapItem>
-                              ))}
+                            <VStack key={log.id}>
+                              <HStack>
+                                <Wrap
+                                  spacingX="1em"
+                                  spacingY="0.5em"
+                                  gap="1em"
+                                  pt="0.5em"
+                                >
+                                  <WrapItem>
+                                    <HStack>
+                                      <Text>frequency:</Text>
+                                      <FormControl isInvalid={meta.error}>
+                                        <InputGroup maxW="8em">
+                                          <NumberInput
+                                            min={0}
+                                            max={1}
+                                            value={log.frequency}
+                                            onChange={val =>
+                                              form.setFieldValue(
+                                                `customLogs.${index}.frequency`,
+                                                val
+                                              )
+                                            }
+                                          >
+                                            <NumberInputField
+                                              h="2em"
+                                              w="6em"
+                                              placeholder="0"
+                                            />
+                                          </NumberInput>
+                                        </InputGroup>
+                                      </FormControl>
+                                    </HStack>
+                                  </WrapItem>
+                                  {Object.keys(log.fields).map(keyName => (
+                                    <WrapItem key={`${log.id}.${keyName}`}>
+                                      <HStack>
+                                        <Text>{keyName}:</Text>
+                                        <FormControl>
+                                          <Input
+                                            defaultValue={log.fields[keyName]}
+                                            //change values onBlur to improve rendering performance
+                                            onBlur={event =>
+                                              form.setFieldValue(
+                                                `customLogs.${index}.fields.${keyName}`,
+                                                event.target.value
+                                              )
+                                            }
+                                            placeholder="random"
+                                            h="2em"
+                                            w="8em"
+                                          />
+                                        </FormControl>
+                                      </HStack>
+                                    </WrapItem>
+                                  ))}
+                                </Wrap>
+                                <IconButton
+                                  icon={<SmallCloseIcon />}
+                                  variant="ghost"
+                                  onClick={() => {
+                                    form.setFieldValue(
+                                      field.name,
+                                      field.value.filter((_, i) => i !== index)
+                                    );
+                                  }}
+                                />
+                              </HStack>
                               <Divider pt="0.5em" />
-                            </Wrap>
+                            </VStack>
                           ))}
                           <FormErrorMessage>{meta.error}</FormErrorMessage>
                           <IconButton
                             icon={<AddIcon />}
                             size="sm"
-                            onClick={() => {
+                            onClick={() =>
                               form.setFieldValue(field.name, [
                                 ...field.value,
-                                defaultCustomLog,
-                              ]);
-                              console.log(field.value);
-                            }}
+                                {
+                                  ...defaultCustomLog,
+                                  id: crypto.randomUUID(),
+                                },
+                              ])
+                            }
                           />
                         </VStack>
                       </ModalBody>
@@ -430,7 +450,7 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
               }}
             </Field>
             {props.values.mode === 'Stream' && (
-              <VStack spacing="1em" align="flex-start">
+              <VStack spacing="0.4em" align="flex-start">
                 <Field name="streamSettings.streamAddress">
                   {({ field, meta }) => (
                     <FormControl
