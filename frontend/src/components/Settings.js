@@ -1,24 +1,15 @@
-import { AddIcon, InfoIcon, SmallCloseIcon } from '@chakra-ui/icons';
+import { InfoIcon } from '@chakra-ui/icons';
 import {
   Box,
   Button,
   Checkbox,
-  Divider,
   FormControl,
   FormErrorMessage,
   FormLabel,
   HStack,
-  IconButton,
   Input,
   InputGroup,
   InputRightElement,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
   NumberInput,
   NumberInputField,
   Radio,
@@ -27,11 +18,10 @@ import {
   Tooltip,
   useDisclosure,
   VStack,
-  Wrap,
-  WrapItem,
 } from '@chakra-ui/react';
 import { Field, Form, Formik } from 'formik';
 import React from 'react';
+import CustomLogsModal from './CustomLogsModal';
 
 const defaultCustomLog = {
   frequency: 0.05,
@@ -203,7 +193,7 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
         const requestOptions = {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(values),
+          body: JSON.stringify(body),
         };
 
         // send and handle request
@@ -310,121 +300,14 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
                       <FormErrorMessage mt="0">{meta.error}</FormErrorMessage>
                     )}
                   </VStack>
-                  <Modal
+                  <CustomLogsModal
                     isOpen={isOpen}
                     onClose={onClose}
-                    size="6xl"
-                    closeOnEsc={false}
-                  >
-                    <ModalOverlay />
-                    <ModalContent>
-                      <ModalHeader>Custom Logs</ModalHeader>
-                      <ModalCloseButton />
-                      <ModalBody>
-                        <VStack align="start">
-                          {field.value.map((log, index) => (
-                            <VStack key={log.id}>
-                              <HStack>
-                                <Wrap
-                                  spacingX="1em"
-                                  spacingY="0.5em"
-                                  gap="1em"
-                                  pt="0.5em"
-                                >
-                                  <WrapItem>
-                                    <HStack>
-                                      <Text>frequency:</Text>
-                                      <FormControl isInvalid={meta.error}>
-                                        <InputGroup maxW="8em">
-                                          <NumberInput
-                                            min={0}
-                                            max={1}
-                                            value={log.frequency}
-                                            onChange={val =>
-                                              form.setFieldValue(
-                                                `customLogs.${index}.frequency`,
-                                                val
-                                              )
-                                            }
-                                          >
-                                            <NumberInputField
-                                              h="2em"
-                                              w="6em"
-                                              placeholder="0"
-                                            />
-                                          </NumberInput>
-                                        </InputGroup>
-                                      </FormControl>
-                                    </HStack>
-                                  </WrapItem>
-                                  {Object.keys(log.fields).map(keyName => (
-                                    <WrapItem key={`${log.id}.${keyName}`}>
-                                      <HStack>
-                                        <Text>{keyName}:</Text>
-                                        <FormControl>
-                                          <Input
-                                            defaultValue={log.fields[keyName]}
-                                            //change values onBlur to improve rendering performance
-                                            onBlur={event =>
-                                              form.setFieldValue(
-                                                `customLogs.${index}.fields.${keyName}`,
-                                                event.target.value
-                                              )
-                                            }
-                                            placeholder="random"
-                                            h="2em"
-                                            w="8em"
-                                          />
-                                        </FormControl>
-                                      </HStack>
-                                    </WrapItem>
-                                  ))}
-                                </Wrap>
-                                <IconButton
-                                  icon={<SmallCloseIcon />}
-                                  variant="ghost"
-                                  onClick={() => {
-                                    form.setFieldValue(
-                                      field.name,
-                                      field.value.filter((_, i) => i !== index)
-                                    );
-                                  }}
-                                />
-                              </HStack>
-                              <Divider pt="0.5em" />
-                            </VStack>
-                          ))}
-                          <FormErrorMessage>{meta.error}</FormErrorMessage>
-                          <IconButton
-                            icon={<AddIcon />}
-                            size="sm"
-                            onClick={() =>
-                              form.setFieldValue(field.name, [
-                                ...field.value,
-                                {
-                                  ...defaultCustomLog,
-                                  id: crypto.randomUUID(),
-                                },
-                              ])
-                            }
-                          />
-                        </VStack>
-                      </ModalBody>
-
-                      <ModalFooter>
-                        <Button
-                          variant="ghost"
-                          mr={3}
-                          onClick={() => form.setFieldValue(field.name, [])}
-                        >
-                          Reset
-                        </Button>
-                        <Button colorScheme="blue" onClick={onClose}>
-                          Close
-                        </Button>
-                      </ModalFooter>
-                    </ModalContent>
-                  </Modal>
+                    field={field}
+                    form={form}
+                    meta={meta}
+                    defaultCustomLog={defaultCustomLog}
+                  />
                 </FormControl>
               )}
             </Field>
