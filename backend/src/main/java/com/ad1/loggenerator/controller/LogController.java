@@ -1,6 +1,10 @@
 package com.ad1.loggenerator.controller;
 
+import com.ad1.loggenerator.service.AWSLogService;
 import com.ad1.loggenerator.service.implementation.*;
+
+import jakarta.validation.Valid;
+
 import org.json.simple.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,8 +26,6 @@ import lombok.AllArgsConstructor;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Receives user requests and returns responses via REST API
@@ -39,7 +41,7 @@ public class LogController {
     private final StatisticsUtilitiesService statisticsUtilitiesService;
     private final AWSBatchService awsbatchService;
     private final AWSStreamService awsStreamService;
-    private final AWSLogService awsLogService;
+    private AWSLogService awsLogService;
 
     /**
      * Method to generate log files in batch mode to AWS s3
@@ -49,7 +51,7 @@ public class LogController {
      */
     @PostMapping("/batch/s3")
     public ResponseEntity<String> generateBatchRequestToS3(
-            @RequestBody SelectionModel selectionModel) throws InterruptedException, IOException {
+            @Valid @RequestBody SelectionModel selectionModel) throws InterruptedException, IOException {
 
         if (selectionModel.getMode().equals("Batch")) {
             String jobId = awsLogService.generateJobId();
@@ -85,7 +87,7 @@ public class LogController {
      */
     @PostMapping("/stream/s3")
     public ResponseEntity<String> generateStreamRequestToS3(
-            @RequestBody SelectionModel selectionModel) throws InterruptedException, IOException {
+            @Valid @RequestBody SelectionModel selectionModel) throws InterruptedException, IOException {
 
         if (selectionModel.getMode().equals("Stream")) {
             String jobId = awsLogService.generateJobId();
@@ -120,7 +122,7 @@ public class LogController {
      */
     @PostMapping("/stream/s3/Buffer")
     public ResponseEntity<String> generateStreamRequestToS3Buffer(
-            @RequestBody SelectionModel selectionModel) throws InterruptedException, IOException {
+            @Valid @RequestBody SelectionModel selectionModel) throws InterruptedException, IOException {
 
         if (selectionModel.getMode().equals("Stream")) {
             String jobId = awsLogService.generateJobId();

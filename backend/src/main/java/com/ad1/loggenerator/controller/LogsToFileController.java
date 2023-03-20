@@ -3,7 +3,11 @@ package com.ad1.loggenerator.controller;
 import com.ad1.loggenerator.exception.AddressNotFoundException;
 import com.ad1.loggenerator.model.*;
 import com.ad1.loggenerator.service.implementation.*;
+
+import jakarta.validation.Valid;
+
 import lombok.AllArgsConstructor;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,7 +32,8 @@ public class LogsToFileController {
     // general request for generating batch files or streaming
     @PostMapping("/batch")
     public ResponseEntity<String> generateBatchRequest(
-            @RequestBody SelectionModel selectionModel) throws InterruptedException {
+            @Valid @RequestBody SelectionModel selectionModel) throws InterruptedException {
+
         URL object = null;
         if (selectionModel.getMode().equals("Batch")) {
             String jobId = batchService.generateJobId();
@@ -57,7 +62,7 @@ public class LogsToFileController {
 
     @PostMapping("/stream")
     public ResponseEntity<String> generateStreamRequest(
-            @RequestBody SelectionModel selectionModel) throws InterruptedException {
+            @Valid @RequestBody SelectionModel selectionModel) throws InterruptedException {
         URL object = null;
         if (selectionModel.getMode().equals("Stream")) {
 

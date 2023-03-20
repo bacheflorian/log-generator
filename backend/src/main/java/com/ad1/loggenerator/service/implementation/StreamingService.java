@@ -65,6 +65,9 @@ public class StreamingService {
         String streamAddress = selectionModel.getStreamSettings().getStreamAddress();
         WebClient webClient = WebClient.create(streamAddress);
         String[] errorMessage = {""};
+
+        // remove fields that should not be included in custom logs
+        logService.removeExcludedFields(selectionModel.getCustomLogs(), selectionModel);
         
         while (streamJobTracker.getStatus() == JobStatus.ACTIVE) {
             JSONObject logLine = logService.generateLogLine(selectionModel);
@@ -127,22 +130,37 @@ public class StreamingService {
         // specify filepath location for stream file
         String filename = "C:\\log-generator\\stream\\" + timestamp + ".json";
 
+        // remove fields that should not be included in custom logs
+        logService.removeExcludedFields(selectionModel.getCustomLogs(), selectionModel);
+
         try {
             FileWriter fileWriter = new FileWriter(filename);
+
+            // write a [ to begin the log file
+            fileWriter.write("[");
+
             while (streamJobTracker.getStatus() == JobStatus.ACTIVE) {
+
+                if (streamJobTracker.getLogCount() > 0) { // add delimiter if not first log line written
+                    fileWriter.write(",\n");
+                }
                 
                 JSONObject logLine = logService.generateLogLine(selectionModel);
-                fileWriter.write(logLine.toString() + "\n");
+                fileWriter.write(logLine.toString());
+                streamJobTracker.setLogCount(streamJobTracker.getLogCount() + 1);
 
                 // determine if a log lines repeats
                 if (Math.random() < selectionModel.getRepeatingLoglinesPercent()) {
-                    fileWriter.write(logLine.toString() + "\n");
+                    fileWriter.write(",\n");
+                    fileWriter.write(logLine.toString());
                     streamJobTracker.setLogCount(streamJobTracker.getLogCount() + 1);
                 }
-                
-                fileWriter.write(logLine.toString() + "\n");
-                streamJobTracker.setLogCount(streamJobTracker.getLogCount() + 1);
+
             }
+
+            // write a ] to end the log file
+            fileWriter.write("]");
+
             fileWriter.close();
 
         } catch (IOException e) {

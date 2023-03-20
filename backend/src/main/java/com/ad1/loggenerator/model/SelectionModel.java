@@ -1,5 +1,10 @@
 package com.ad1.loggenerator.model;
 
+import java.util.List;
+
+import com.ad1.loggenerator.model.validation.ValidCustomLog;
+
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,6 +21,7 @@ public class SelectionModel {
     private double repeatingLoglinesPercent;
 
     // field settings
+    @Valid
     private FieldSettings fieldSettings;
 
     // malware settings
@@ -29,5 +35,9 @@ public class SelectionModel {
 
     // batch mode settings
     private BatchSettings batchSettings;
+
+    // list of unique custom logs
+    @ValidCustomLog
+    private List<CustomLog> customLogs;
 
 }
