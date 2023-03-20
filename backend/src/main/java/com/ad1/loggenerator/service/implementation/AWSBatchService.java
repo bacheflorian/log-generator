@@ -5,12 +5,8 @@ import com.ad1.loggenerator.model.BatchSettings;
 import com.ad1.loggenerator.model.BatchTracker;
 import com.ad1.loggenerator.model.JobStatus;
 import com.ad1.loggenerator.model.SelectionModel;
-import com.ad1.loggenerator.service.AmazonService;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.regions.Regions;
+import com.ad1.loggenerator.service.AWSLogService;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.S3Object;
 import lombok.AllArgsConstructor;
@@ -18,16 +14,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.net.URL;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.UUID;
 
 @Service
 @AllArgsConstructor
@@ -40,7 +31,7 @@ public class AWSBatchService{
     private AWSLogService awsLogService;
     /**
      * Generates and populates logs in batch mode
-     *
+     * Save generated logs to AWS S3
      * @param selectionModel defines all the parameters to be included in the batch
      *                       files as per the user
      */
@@ -51,23 +42,38 @@ public class AWSBatchService{
         String key = "batch/" + awsLogService.createCurrentTimeDate() + ".json";
         AmazonS3 s3Client = awsLogService.createS3Client();
 
+        // remove fields that should not be included in custom logs
+        logService.removeExcludedFields(selectionModel.getCustomLogs(), selectionModel);
+
         try {
             // batch settings
             BatchSettings batchSettings = selectionModel.getBatchSettings();
             // Add log lines to a StringBuilder
             StringBuilder logLines = new StringBuilder();
+            // append [ as the first character
+            logLines.append("[");
+
             for (int i = 0; i < batchSettings.getNumberOfLogs(); i++) {
+
+                if (i > 0) {
+                    // add a delimiter if not the first log line generated
+                    logLines.append(",\n");
+                }
+
                 JSONObject logLine = logService.generateLogLine(selectionModel);
-                logLines.append(logLine.toString() + "\n");
-//                batchJobTracker.setLogCount(batchJobTracker.getLogCount() + 1);
+                logLines.append(logLine.toString());
 
                 // determine if a log lines repeats
                 if (Math.random() < selectionModel.getRepeatingLoglinesPercent()) {
-                    logLines.append(logLine.toString() + "\n");
+                    logLines.append(",\n");
+                    logLines.append(logLine.toString());
                     i++;
 //                    batchJobTracker.setLogCount(batchJobTracker.getLogCount() + 1);
                 }
             }
+
+            // append ] as the last character
+            logLines.append("]");
             // Upload the batch file to S3
             s3Client.putObject(bucketName, key, logLines.toString());
 
