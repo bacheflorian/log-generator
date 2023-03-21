@@ -213,8 +213,18 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
               }
             } else {
               const error = await response.json();
+              console.log(error);
 
-              throw Error(error.message);
+              // if error has a message, throw error message
+              if (error.message) throw Error(error.message);
+
+              // parse error fields into a message
+              let errorMessage = '';
+              Object.entries(error).forEach(([key, value]) => {
+                errorMessage += `\n- ${key}: ${value}`;
+              });
+
+              throw Error(errorMessage);
             }
           })
           .catch(err => alert(err))
