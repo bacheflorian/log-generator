@@ -41,6 +41,8 @@ function CustomLogsModal({
   function replacer(key, value) {
     if (key === 'id') return undefined;
     else if (value === '') return undefined;
+    else if (['timeStamp', 'processingTime', 'disposition'].includes(key))
+      return isNaN(Number(value)) ? value : Number(value);
     else return value;
   }
 
