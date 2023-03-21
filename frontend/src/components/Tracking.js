@@ -77,7 +77,6 @@ function Tracking({ jobID, setJobID, startTime, batchMode, batchSize }) {
         response = JSON.parse(response.body);
 
         // update logsCreated
-        console.log(response);
         setlogsCreated(response.logLineCount);
 
         // update chart data
