@@ -21,7 +21,7 @@ export function useJobs() {
           data.streamJobs.sort((a, b) => b.startTime - a.startTime)
         );
       })
-      .catch(err => alert(err));
+      .catch(err => console.error(err));
   }
 
   useEffect(() => {

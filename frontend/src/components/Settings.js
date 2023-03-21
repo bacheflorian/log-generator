@@ -1,4 +1,6 @@
+import { InfoIcon } from '@chakra-ui/icons';
 import {
+  Box,
   Button,
   Checkbox,
   FormControl,
@@ -12,12 +14,31 @@ import {
   NumberInputField,
   Radio,
   RadioGroup,
+  Text,
+  Tooltip,
+  useDisclosure,
   VStack,
 } from '@chakra-ui/react';
 import { Field, Form, Formik } from 'formik';
 import React from 'react';
+import CustomLogsModal from './CustomLogsModal';
+
+const defaultCustomLog = {
+  frequency: 0.05,
+  fields: {
+    timeStamp: '',
+    processingTime: '',
+    currentUserID: '',
+    businessGUID: '',
+    pathToFile: '',
+    fileSHA256: '',
+    disposition: '',
+  },
+};
 
 function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
   const validate = values => {
     const errors = {};
 
@@ -55,7 +76,40 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
       errors.mode = 'Invalid mode selected';
     }
 
+    // custom logs validation
+    // validate total frequency less than or equal to 1
+    let total = 0;
+    values.customLogs.forEach(function (customLog) {
+      total += Number(customLog.frequency);
+    });
+
+    if (total > 1) {
+      errors.customLogs =
+        'Frequency of all custom logs must be less than or equal to 1';
+    }
+
     return errors;
+  };
+
+  const FieldSetting = ({ name, fieldName }) => {
+    return (
+      <HStack justifyContent="space-between" w="92%">
+        <Field
+          as={Checkbox}
+          name={'fieldSettings.' + fieldName + '.include'}
+          defaultChecked
+        >
+          {name}
+        </Field>
+        <Box w="11em">
+          <Field name={'fieldSettings.' + fieldName + '.values'}>
+            {({ field, meta }) => (
+              <Input {...field} placeholder="randomly generated" h="2em" />
+            )}
+          </Field>
+        </Box>
+      </HStack>
+    );
   };
 
   return (
@@ -63,19 +117,15 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
       initialValues={{
         repeatingLoglinesPercent: 0,
         fieldSettings: {
-          includeTimeStamp: true,
-          includeProcessingTime: true,
-          includeCurrentUserID: true,
-          includeBusinessGUID: true,
-          includePathToFile: true,
-          includeFileSHA256: true,
-          includeDisposition: true,
+          timeStamp: { include: true, values: '' },
+          processingTime: { include: true, values: '' },
+          currentUserID: { include: true, values: '' },
+          businessGUID: { include: true, values: '' },
+          pathToFile: { include: true, values: '' },
+          fileSHA256: { include: true, values: '' },
+          disposition: { include: true, values: '' },
         },
-        malwareSettings: {
-          includeTrojan: false,
-          includeAdware: false,
-          includeRansom: false,
-        },
+        customLogs: [],
         mode: 'Stream',
         streamSettings: {
           streamAddress: '',
@@ -92,6 +142,46 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
           values.batchSettings.numberOfLogs
         );
 
+        // Process body
+        // Create a copy of values
+        const body = JSON.parse(JSON.stringify(values));
+
+        // field settings
+        // split field values
+        Object.keys(body.fieldSettings).forEach(function (key) {
+          const val = body.fieldSettings[key].values;
+
+          if (val === '') {
+            // if no value is entered, send empty array
+            body.fieldSettings[key].values = [];
+          } else if (val === ',') {
+            // if only a comma entered, send array with a single empty string
+            body.fieldSettings[key].values = [''];
+          } else {
+            // split string by comma
+            body.fieldSettings[key].values = val.split(',');
+          }
+        });
+
+        // custom logs
+        // filter empty fields and remove id
+        body.customLogs.forEach(function (customLog) {
+          Object.keys(customLog.fields).forEach(
+            key => customLog.fields[key] === '' && delete customLog.fields[key]
+          );
+
+          delete customLog.id;
+        });
+
+        // filter customLogs with no fields provided
+        body.customLogs = body.customLogs.filter(
+          customLog => Object.keys(customLog.fields).length !== 0
+        );
+
+        // log body
+        console.log(JSON.stringify(body, null, 2));
+
+        // request address
         let address = process.env.REACT_APP_API_URL + 'generate/';
         if (values.mode === 'Batch') {
           address = address + 'batch';
@@ -99,14 +189,14 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
           address = address + 'stream';
         }
 
-        //alert(JSON.stringify(values, null, 2));
-        console.log(JSON.stringify(values, null, 2));
+        // request options
         const requestOptions = {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(values),
+          body: JSON.stringify(body),
         };
 
+        // send and handle request
         fetch(address, requestOptions)
           .then(async response => {
             if (response.ok) {
@@ -123,8 +213,18 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
               }
             } else {
               const error = await response.json();
+              console.log(error);
 
-              throw Error(error.message);
+              // if error has a message, throw error message
+              if (error.message) throw Error(error.message);
+
+              // parse error fields into a message
+              let errorMessage = '';
+              Object.entries(error).forEach(([key, value]) => {
+                errorMessage += `\n- ${key}: ${value}`;
+              });
+
+              throw Error(errorMessage);
             }
           })
           .catch(err => alert(err))
@@ -133,7 +233,7 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
     >
       {props => (
         <Form>
-          <VStack spacing="1.5em" align="flex-start">
+          <VStack spacing="1.1em" align="flex-start">
             <Field name="repeatingLoglinesPercent">
               {({ field, form }) => (
                 <FormControl isInvalid={form.errors.repeatingLoglinesPercent}>
@@ -161,74 +261,66 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
                 </FormControl>
               )}
             </Field>
-            <FormControl>
-              <FormLabel>Include Fields:</FormLabel>
-              <VStack spacing="0.75em" align="flex-start">
-                <Field
-                  as={Checkbox}
-                  name="fieldSettings.includeTimeStamp"
-                  defaultChecked
+            <FormControl w="26em">
+              <FormLabel mb="0">Field Settings:</FormLabel>
+              <HStack w="67%" justify="space-between" pt="0.25em" pb="0.25em">
+                <Tooltip label="Select fields to include" placement="right">
+                  <Text fontWeight="500" pl="0.25em">
+                    Fields
+                  </Text>
+                </Tooltip>
+                <Tooltip
+                  label="All fields will be randomly generated unless values are specified. To provide multiple values separate them with a comma."
+                  placement="top-start"
                 >
-                  Time stamp
-                </Field>
-                <Field
-                  as={Checkbox}
-                  name="fieldSettings.includeProcessingTime"
-                  defaultChecked
-                >
-                  Processing time
-                </Field>
-                <Field
-                  as={Checkbox}
-                  name="fieldSettings.includeCurrentUserID"
-                  defaultChecked
-                >
-                  Current user ID
-                </Field>
-                <Field
-                  as={Checkbox}
-                  name="fieldSettings.includeBusinessGUID"
-                  defaultChecked
-                >
-                  Business GUID
-                </Field>
-                <Field
-                  as={Checkbox}
-                  name="fieldSettings.includePathToFile"
-                  defaultChecked
-                >
-                  Path to file
-                </Field>
-                <Field
-                  as={Checkbox}
-                  name="fieldSettings.includeFileSHA256"
-                  defaultChecked
-                >
-                  File SHA256
-                </Field>
-                <Field
-                  as={Checkbox}
-                  name="fieldSettings.includeDisposition"
-                  defaultChecked
-                >
-                  Disposition
-                </Field>
+                  <HStack>
+                    <Text fontWeight="500">Values</Text>
+                    <InfoIcon boxSize={3} />
+                  </HStack>
+                </Tooltip>
+              </HStack>
+              <VStack spacing="0.4em" align="flex-start">
+                <FieldSetting name="Time stamp" fieldName="timeStamp" />
+                <FieldSetting
+                  name="Processing time"
+                  fieldName="processingTime"
+                />
+                <FieldSetting
+                  name="Current user ID"
+                  fieldName="currentUserID"
+                />
+                <FieldSetting name="Business GUID" fieldName="businessGUID" />
+                <FieldSetting name="Path to file" fieldName="pathToFile" />
+                <FieldSetting name="File SHA256" fieldName="fileSHA256" />
+                <FieldSetting name="Disposition" fieldName="disposition" />
               </VStack>
             </FormControl>
-            <FormControl>
-              <FormLabel>Include Malware:</FormLabel>
-              <VStack spacing="0.75em" align="flex-start">
-                <Field as={Checkbox} name="malwareSettings.includeTrojan">
-                  Trojan
-                </Field>
-                <Field as={Checkbox} name="malwareSettings.includeAdware">
-                  Adware
-                </Field>
-                <Field as={Checkbox} name="malwareSettings.includeRansom">
-                  Ransom
-                </Field>
-              </VStack>
-            </FormControl>
+            <Field name="customLogs">
+              {({ field, form, meta }) => (
+                <FormControl isInvalid={meta.error}>
+                  <FormLabel>Custom Logs:</FormLabel>
+                  <VStack align="start">
+                    <HStack spacing="1.5em">
+                      <Text fontWeight="medium">{field.value.length}</Text>
+                      <Button onClick={onOpen} size="sm">
+                        Edit
+                      </Button>
+                    </HStack>
+                    {!isOpen && (
+                      <FormErrorMessage mt="0">{meta.error}</FormErrorMessage>
+                    )}
+                  </VStack>
+                  <CustomLogsModal
+                    isOpen={isOpen}
+                    onClose={onClose}
+                    field={field}
+                    form={form}
+                    meta={meta}
+                    defaultCustomLog={defaultCustomLog}
+                  />
+                </FormControl>
+              )}
+            </Field>
             <Field name="mode">
               {({ field, meta }) => {
                 const { onChange, ...rest } = field;
@@ -251,7 +343,7 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
               }}
             </Field>
             {props.values.mode === 'Stream' && (
-              <VStack spacing="1em" align="flex-start">
+              <VStack spacing="0.4em" align="flex-start">
                 <Field name="streamSettings.streamAddress">
                   {({ field, meta }) => (
                     <FormControl
@@ -270,29 +362,27 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
               </VStack>
             )}
             {props.values.mode === 'Batch' && (
-              <div>
-                <Field name="batchSettings.numberOfLogs">
-                  {({ field, form, meta }) => (
-                    <FormControl
-                      isRequired
-                      isInvalid={meta.touched && meta.error}
-                    >
-                      <FormLabel>Number of Logs</FormLabel>
-                      <InputGroup maxW="10em">
-                        <NumberInput
-                          min={1}
-                          max={1000000000}
-                          precision={0}
-                          onChange={val => form.setFieldValue(field.name, val)}
-                        >
-                          <NumberInputField placeholder="1000" />
-                        </NumberInput>
-                      </InputGroup>
-                      <FormErrorMessage>{meta.error}</FormErrorMessage>
-                    </FormControl>
-                  )}
-                </Field>
-              </div>
+              <Field name="batchSettings.numberOfLogs">
+                {({ field, form, meta }) => (
+                  <FormControl
+                    isRequired
+                    isInvalid={meta.touched && meta.error}
+                  >
+                    <FormLabel>Number of Logs</FormLabel>
+                    <InputGroup maxW="10em">
+                      <NumberInput
+                        min={1}
+                        max={1000000000}
+                        precision={0}
+                        onChange={val => form.setFieldValue(field.name, val)}
+                      >
+                        <NumberInputField placeholder="1000" />
+                      </NumberInput>
+                    </InputGroup>
+                    <FormErrorMessage>{meta.error}</FormErrorMessage>
+                  </FormControl>
+                )}
+              </Field>
             )}
             <Button
               mt={4}
