@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.net.URL;
+import java.util.Set;
 
 @Data
 @AllArgsConstructor
@@ -36,7 +37,8 @@ public class AWSStreamService {
         String key = "stream/" + awsLogService.createCurrentTimeDate() + ".json";
 
         // remove fields that should not be included in custom logs
-        logService.removeExcludedFields(selectionModel.getCustomLogs(), selectionModel);
+        logService.preProcessCustomLogs(selectionModel.getCustomLogs(), selectionModel);
+        Set<String> masterFieldList = logService.getMasterFieldsList(selectionModel.getCustomLogs());
 
         // create s3 client instance
         AmazonS3 s3Client = awsLogService.createS3Client();
@@ -57,7 +59,7 @@ public class AWSStreamService {
             while (streamJobTracker.getStatus() == JobStatus.ACTIVE) {
 
                 // generate log line
-                JSONObject logLine = logService.generateLogLine(selectionModel);
+                JSONObject logLine = logService.generateLogLine(selectionModel, masterFieldList);
                 // add a comma before log line if it's not the first one
                 if (numLogLines > 0) {
                     buffer.write(",\n".getBytes());
@@ -118,7 +120,8 @@ public class AWSStreamService {
         String key = "stream/" + awsLogService.createCurrentTimeDate() + ".json";
 
         // remove fields that should not be included in custom logs
-        logService.removeExcludedFields(selectionModel.getCustomLogs(), selectionModel);
+        logService.preProcessCustomLogs(selectionModel.getCustomLogs(), selectionModel);
+        Set<String> masterFieldList = logService.getMasterFieldsList(selectionModel.getCustomLogs());
 
         // create s3 client instance
         AmazonS3 s3Client = awsLogService.createS3Client();
@@ -140,7 +143,7 @@ public class AWSStreamService {
                 }
 
                 // generate log line
-                JSONObject logLine = logService.generateLogLine(selectionModel);
+                JSONObject logLine = logService.generateLogLine(selectionModel, masterFieldList);
 
                 // append log line to StringBuilder
                 stringBuilder.append(logLine.toString());

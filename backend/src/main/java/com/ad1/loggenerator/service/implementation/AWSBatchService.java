@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Set;
 
 @Service
 @AllArgsConstructor
@@ -43,7 +44,8 @@ public class AWSBatchService{
         AmazonS3 s3Client = awsLogService.createS3Client();
 
         // remove fields that should not be included in custom logs
-        logService.removeExcludedFields(selectionModel.getCustomLogs(), selectionModel);
+        logService.preProcessCustomLogs(selectionModel.getCustomLogs(), selectionModel);
+        Set<String> masterFieldList = logService.getMasterFieldsList(selectionModel.getCustomLogs());
 
         try {
             // batch settings
@@ -60,7 +62,7 @@ public class AWSBatchService{
                     logLines.append(",\n");
                 }
 
-                JSONObject logLine = logService.generateLogLine(selectionModel);
+                JSONObject logLine = logService.generateLogLine(selectionModel, masterFieldList);
                 logLines.append(logLine.toString());
 
                 // determine if a log lines repeats
