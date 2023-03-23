@@ -4,6 +4,7 @@ import com.ad1.loggenerator.exception.AWSServiceNotAvailableException;
 import com.ad1.loggenerator.model.JobStatus;
 import com.ad1.loggenerator.model.SelectionModel;
 import com.ad1.loggenerator.model.StreamTracker;
+import com.ad1.loggenerator.service.AWSLogService;
 import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
@@ -27,7 +28,7 @@ public class AWSStreamService {
     @Autowired
     private LogService logService;
     @Autowired
-    private AmazonService awsLogService;
+    private AWSLogService awsLogService;
 
     @Async("asyncTaskExecutor")
     public void streamToS3Buffer(SelectionModel selectionModel, StreamTracker streamJobTracker) throws IOException {

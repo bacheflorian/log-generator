@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
+import lombok.AllArgsConstructor;
 import org.json.simple.JSONObject;
 import org.springframework.stereotype.Service;
 

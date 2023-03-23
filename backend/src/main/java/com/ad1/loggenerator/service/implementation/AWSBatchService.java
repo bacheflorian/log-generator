@@ -24,7 +24,7 @@ import java.net.URL;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class AWSBatchService{
+public class AWSBatchService {
     @Autowired
     private LogService logService;
     @Autowired
