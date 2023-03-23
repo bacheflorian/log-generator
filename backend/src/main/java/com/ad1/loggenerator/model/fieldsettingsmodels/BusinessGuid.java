@@ -18,7 +18,7 @@ public class BusinessGuid {
     @NotNull(message="is required")
     private Boolean include;
     // the optional values to include
-    @ValidUUID
+    // @ValidUUID
     @NotNull
     private List<String> values;
 

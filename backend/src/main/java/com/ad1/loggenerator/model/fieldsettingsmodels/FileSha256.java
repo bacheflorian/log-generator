@@ -19,7 +19,7 @@ public class FileSha256 {
     private Boolean include;
     // the optional values to include
     @NotNull
-    @ValidUUID
+    // @ValidUUID
     private List<String> values;
 
 }
