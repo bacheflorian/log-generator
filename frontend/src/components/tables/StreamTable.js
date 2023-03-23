@@ -1,3 +1,5 @@
+import { DownloadIcon, NotAllowedIcon } from '@chakra-ui/icons';
+import { Center, Link, Tooltip } from '@chakra-ui/react';
 import { React, useMemo } from 'react';
 import DataTable from './DataTable';
 
@@ -27,6 +29,29 @@ function StreamTable({ data }) {
       {
         Header: 'Status',
         accessor: 'status',
+      },
+      {
+        Header: 'Download',
+        accessor: 'streamObjectURL',
+        Cell: props =>
+          props.value ? (
+            <Link
+              href={props.value}
+              isExternal
+              display="flex"
+              justifyContent="center"
+            >
+              <Tooltip label="Download">
+                <DownloadIcon mx="2px" />
+              </Tooltip>
+            </Link>
+          ) : (
+            <Center>
+              <Tooltip label="Not Available">
+                <NotAllowedIcon mx="2px" />
+              </Tooltip>
+            </Center>
+          ),
       },
     ],
     []
