@@ -77,7 +77,7 @@ function Tracking({ jobID, setJobID, startTime, batchMode, batchSize }) {
     let stompClient = Stomp.over(
       () => new SockJS(process.env.REACT_APP_SOCKET_URL)
     );
-    stompClient.debug = () => {}; //disables stomp debug console logs
+    //stompClient.debug = () => {}; //disables stomp debug console logs
     stompClient.connect({}, function (frame) {
       stompClient.subscribe('/topic/job/' + jobID, function (response) {
         // parse response
