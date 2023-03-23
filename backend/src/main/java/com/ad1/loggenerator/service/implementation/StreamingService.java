@@ -4,7 +4,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.scheduling.annotation.Async;
 
@@ -67,10 +68,11 @@ public class StreamingService {
         String[] errorMessage = {""};
 
         // remove fields that should not be included in custom logs
-        logService.removeExcludedFields(selectionModel.getCustomLogs(), selectionModel);
+        logService.preProcessCustomLogs(selectionModel.getCustomLogs(), selectionModel);
+        Set<String> masterFieldList = logService.getMasterFieldsList(selectionModel.getCustomLogs());
         
         while (streamJobTracker.getStatus() == JobStatus.ACTIVE) {
-            JSONObject logLine = logService.generateLogLine(selectionModel);
+            JSONObject logLine = logService.generateLogLine(selectionModel, masterFieldList);
 
             // set up post request
             Mono<String> response = webClient.post()
@@ -131,7 +133,8 @@ public class StreamingService {
         String filename = "C:\\log-generator\\stream\\" + timestamp + ".json";
 
         // remove fields that should not be included in custom logs
-        logService.removeExcludedFields(selectionModel.getCustomLogs(), selectionModel);
+        logService.preProcessCustomLogs(selectionModel.getCustomLogs(), selectionModel);
+        Set<String> masterFieldList = logService.getMasterFieldsList(selectionModel.getCustomLogs());
 
         try {
             FileWriter fileWriter = new FileWriter(filename);
@@ -145,7 +148,7 @@ public class StreamingService {
                     fileWriter.write(",\n");
                 }
                 
-                JSONObject logLine = logService.generateLogLine(selectionModel);
+                JSONObject logLine = logService.generateLogLine(selectionModel, masterFieldList);
                 fileWriter.write(logLine.toString());
                 streamJobTracker.setLogCount(streamJobTracker.getLogCount() + 1);
 
@@ -182,7 +185,7 @@ public class StreamingService {
         // Setup web client for post request to user specified address
         String streamAddress = selectionModel.getStreamSettings().getStreamAddress();
         WebClient webClient = WebClient.create(streamAddress);
-        JSONObject logLine = logService.generateLogLine(selectionModel);
+        JSONObject logLine = logService.generateLogLine(selectionModel, new HashSet<>());
 
         try {
             // set up post request
