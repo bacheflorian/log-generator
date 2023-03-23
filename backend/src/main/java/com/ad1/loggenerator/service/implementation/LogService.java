@@ -52,18 +52,18 @@ public class LogService {
         }
         if (fieldSettings.getCurrentUserID().getInclude()) {
             List<String> values = fieldSettings.getCurrentUserID().getValues();
-            logLine.setUserId(generateUserId(values));
-            logLineJSON.put("userId", logLine.getUserId());
+            logLine.setCurrentUserID(generateUserId(values));
+            logLineJSON.put("currentUserID", logLine.getCurrentUserID());
         }
         if (fieldSettings.getBusinessGUID().getInclude()) {
             List<String> values = fieldSettings.getBusinessGUID().getValues();
-            logLine.setBusinessId(generateBusinessId(values));
-            logLineJSON.put("businessId", logLine.getBusinessId());
+            logLine.setBusinessGUID(generateBusinessId(values));
+            logLineJSON.put("businessGUID", logLine.getBusinessGUID());
         }
         if (fieldSettings.getPathToFile().getInclude()) {
             List<String> values = fieldSettings.getPathToFile().getValues();
-            logLine.setFilepath(generateFilepath(values));
-            logLineJSON.put("filepath", logLine.getFilepath().replace("\\\\", "\\"));
+            logLine.setPathToFile(generateFilepath(values));
+            logLineJSON.put("pathToFile", logLine.getPathToFile().replace("\\\\", "\\"));
         }
         if (fieldSettings.getFileSHA256().getInclude()) {
             List<String> values = fieldSettings.getFileSHA256().getValues();
@@ -119,17 +119,17 @@ public class LogService {
                         && !fieldSettings.getProcessingTime().getInclude()) {
                 customLog.getFields().remove("processingTime");
             }
-            if (customLog.getFields().containsKey("userId")
+            if (customLog.getFields().containsKey("currentUserID")
                         && !fieldSettings.getCurrentUserID().getInclude()) {
-                customLog.getFields().remove("userId");
+                customLog.getFields().remove("currentUserID");
             }
-            if (customLog.getFields().containsKey("businessId")
+            if (customLog.getFields().containsKey("businessGUID")
                         && !fieldSettings.getBusinessGUID().getInclude()) {
-                customLog.getFields().remove("businessId");
+                customLog.getFields().remove("businessGUID");
             }
-            if (customLog.getFields().containsKey("filepath")
+            if (customLog.getFields().containsKey("pathToFile")
                         && !fieldSettings.getPathToFile().getInclude()) {
-                customLog.getFields().remove("filepath");
+                customLog.getFields().remove("pathToFile");
             }
             if (customLog.getFields().containsKey("fileSHA256")
                         && !fieldSettings.getFileSHA256().getInclude()) {
