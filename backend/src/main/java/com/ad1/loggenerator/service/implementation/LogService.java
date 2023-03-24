@@ -1,8 +1,11 @@
 package com.ad1.loggenerator.service.implementation;
 
 import java.io.File;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 
 import lombok.AllArgsConstructor;
@@ -30,7 +33,7 @@ public class LogService {
      *                       lines as per the user
      * @return a single log line in JSON format
      */
-    public JSONObject generateLogLine(SelectionModel selectionModel) {
+    public JSONObject generateLogLine(SelectionModel selectionModel, Set<String> masterFieldList) {
 
         // generated fields settings
         FieldSettings fieldSettings = selectionModel.getFieldSettings();
@@ -39,65 +42,75 @@ public class LogService {
         LogModel logLine = new LogModel();
         JSONObject logLineJSON = new JSONObject();
 
+        List<CustomLog> customLogs = selectionModel.getCustomLogs();
+        // choose a random custom log based on frequency
+        CustomLog customLog = chooseCustomLog(customLogs);
+
+        if (customLog != null) {
+            addCustomLogFields(logLineJSON, customLog);
+        }
+
         // Generate log line data
-        if (fieldSettings.getTimeStamp().getInclude()) {
+        if (fieldSettings.getTimeStamp().getInclude() && !logLineJSON.containsKey("timeStamp")) {
             List<Long> values = fieldSettings.getTimeStamp().getValues();
             logLine.setTimeStamp(generateTimeStamp(values));
             logLineJSON.put("timeStamp", logLine.getTimeStamp());
         }
-        if (fieldSettings.getProcessingTime().getInclude()) {
+        if (fieldSettings.getProcessingTime().getInclude() && !logLineJSON.containsKey("processingTime")) {
             List<Long> values = fieldSettings.getProcessingTime().getValues();
             logLine.setProcessingTime(generateProcessingTime(values));
             logLineJSON.put("processingTime", logLine.getProcessingTime());
         }
-        if (fieldSettings.getCurrentUserID().getInclude()) {
+        if (fieldSettings.getCurrentUserID().getInclude() && !logLineJSON.containsKey("currentUserID")) {
             List<String> values = fieldSettings.getCurrentUserID().getValues();
             logLine.setCurrentUserID(generateUserId(values));
             logLineJSON.put("currentUserID", logLine.getCurrentUserID());
         }
-        if (fieldSettings.getBusinessGUID().getInclude()) {
+        if (fieldSettings.getBusinessGUID().getInclude() && !logLineJSON.containsKey("businessGUID")) {
             List<String> values = fieldSettings.getBusinessGUID().getValues();
             logLine.setBusinessGUID(generateBusinessId(values));
             logLineJSON.put("businessGUID", logLine.getBusinessGUID());
         }
-        if (fieldSettings.getPathToFile().getInclude()) {
+        if (fieldSettings.getPathToFile().getInclude() && !logLineJSON.containsKey("pathToFile")) {
             List<String> values = fieldSettings.getPathToFile().getValues();
             logLine.setPathToFile(generateFilepath(values));
             logLineJSON.put("pathToFile", logLine.getPathToFile().replace("\\\\", "\\"));
         }
-        if (fieldSettings.getFileSHA256().getInclude()) {
+        if (fieldSettings.getFileSHA256().getInclude() && !logLineJSON.containsKey("fileSHA256")) {
             List<String> values = fieldSettings.getFileSHA256().getValues();
             logLine.setFileSHA256(generateFileSHA256(values));
             logLineJSON.put("fileSHA256", logLine.getFileSHA256());
         }
-        if (fieldSettings.getDisposition().getInclude()) {
+        if (fieldSettings.getDisposition().getInclude() && !logLineJSON.containsKey("disposition")) {
             List<Integer> values = fieldSettings.getDisposition().getValues();
             logLine.setDisposition(generateDisposition(values)); // 1 = Clean, 2 = Suspicious, 3 = Malicious, 4 = Unknown
             logLineJSON.put("disposition", logLine.getDisposition());
         }
 
-        List<CustomLog> customLogs = selectionModel.getCustomLogs();
-
-        // choose a random custom log based on frequency
-        CustomLog customLog = chooseCustomLog(customLogs);
-
-        if (customLogs.size() == 0) {
-            return logLineJSON;
-        }
-
-        if (customLog == null) {
-            // get one of the custom logs to add their fields to the log line
-            // that don't exist on the log line as null
-            addNullCustomLogFields(logLineJSON, customLogs.get(0));
-        } else {
-            // add the fields from the custom log to the log line, overwriting
-            // any of the randomly generated fields
-            addCustomLogFields(logLineJSON, customLog);
-        }
-
-        // additional code required for malware
+        addMasterFieldList(logLineJSON, masterFieldList);
 
         return logLineJSON;
+    }
+
+    private void addMasterFieldList(JSONObject logLineJSON, Set<String> masterFieldList) {
+
+        for (String field: masterFieldList) {
+            if (!logLineJSON.containsKey(field)) {
+                logLineJSON.put(field, null);
+            }
+        }
+    }
+
+    /**
+     * Utility function to preprocess custom logs by removing fields that
+     * should not be included in the custom logs and then modifying the
+     * custom logs to all have the same fields
+     * 
+     * @param customLogs
+     * @param selectionModel
+     */
+    public void preProcessCustomLogs(List<CustomLog> customLogs, SelectionModel selectionModel) {
+        removeExcludedFields(customLogs, selectionModel);
     }
 
     /**
@@ -143,6 +156,30 @@ public class LogService {
     }
 
     /**
+     * Utility function to align all custom logs to have the same fields
+     * 
+     * @param customLogs
+     */
+    public Set<String> getMasterFieldsList(List<CustomLog> customLogs) {
+
+        if (customLogs == null) {
+            return new HashSet<String>();
+        }
+        
+        // Contains a set of all fields for all custom logs
+        Set<String> masterFieldList = new HashSet<>();
+
+        // Add each unique custom log field to the master list
+        for (CustomLog customLog : customLogs) {
+            Map<String, Object> fields = customLog.getFields();
+            Set<String> fieldsList = fields.keySet();
+            masterFieldList.addAll(fieldsList);
+        }
+
+        return masterFieldList;
+    }
+
+    /**
      * This method takes the fields in the custom log and adds them to the log
      * line generated. If the custom log has a field that is part of our model,
      * it will overwrite the randomly generated value
@@ -154,25 +191,6 @@ public class LogService {
 
         for (String key: customLog.getFields().keySet()) {
             logLineJSON.put(key, customLog.getFields().get(key));
-        }
-
-    }
-
-    /**
-     * This method will take the fields in the custom log and add fields that
-     * do not currently exist in the generated log with a value of null
-     * 
-     * @param logLineJSON
-     * @param customLog
-     */
-    private void addNullCustomLogFields(JSONObject logLineJSON, CustomLog customLog) {
-        
-        for (String key: customLog.getFields().keySet()) {
-
-            if (!logLineJSON.containsKey(key)) {
-                // If the generated log does not have the field yet, add it
-                logLineJSON.put(key, null);
-            }
         }
 
     }

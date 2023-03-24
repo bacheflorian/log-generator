@@ -28,15 +28,15 @@ public class CustomLogValidator implements ConstraintValidator<ValidCustomLog, L
         }
 
         // check that the keys are the same for each custom log
-        Set<String> requiredFieldNames = values.get(0).getFields().keySet();
+        // Set<String> requiredFieldNames = values.get(0).getFields().keySet();
 
-        for (CustomLog customLog: values) {
-            Set<String> fieldNames = customLog.getFields().keySet();
+        // for (CustomLog customLog: values) {
+        //     Set<String> fieldNames = customLog.getFields().keySet();
 
-            if (!requiredFieldNames.equals(fieldNames)) {
-                return false;
-            }
-        }
+        //     if (!requiredFieldNames.equals(fieldNames)) {
+        //         return false;
+        //     }
+        // }
 
         return true;
     }
