@@ -65,13 +65,9 @@ public class AWSStreamServiceTest {
         selectionModel = mock(SelectionModel.class);
         streamJobTracker = mock(StreamTracker.class);
         masterFieldList = mock(Set.class);
-
         CustomLog customLog1 = mock(CustomLog.class);
         List<CustomLog> customLogs = new ArrayList<>();
         customLogs.add(customLog1);
-
-//        byte[] bytes = new byte[1024];
-//        new Random().nextBytes(bytes);
         JSONObject logLine = mock(JSONObject.class);
         awsLogService = mock(AWSLogService.class);
         logService = mock(LogService.class);
@@ -79,13 +75,10 @@ public class AWSStreamServiceTest {
         S3Object s3Object = mock(S3Object.class);
 
         when(awsLogService.createCurrentTimeDate()).thenReturn(currentDateTime.format(formatDateTime));
-
         when(customLog1.getFrequency()).thenReturn(0.2);
         when(selectionModel.getCustomLogs()).thenReturn(customLogs);
-
         when(logService.getMasterFieldsList(selectionModel.getCustomLogs())).thenReturn(masterFieldList);
         when(logService.generateLogLine(selectionModel, masterFieldList)).thenReturn(logLine);
-
         when(s3Client.getObject(anyString(), anyString())).thenReturn(s3Object);
         when(awsLogService.getLogCount(any(AmazonS3.class), any(S3Object.class), anyString(), anyString())).thenReturn(10);
         when(awsLogService.createS3Client()).thenReturn(s3Client);
