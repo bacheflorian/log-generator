@@ -11,9 +11,9 @@ public class LogModel {
 
     private long timeStamp;
     private long processingTime;
-    private String userId;
-    private String businessId;
-    private String filepath;
+    private String currentUserID;
+    private String businessGUID;
+    private String pathToFile;
     private String fileSHA256;
     private int disposition;
 

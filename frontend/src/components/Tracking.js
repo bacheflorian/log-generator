@@ -1,8 +1,11 @@
+import { DownloadIcon } from '@chakra-ui/icons';
 import {
   Box,
   Button,
   HStack,
+  Link,
   Text,
+  Tooltip,
   useBoolean,
   VStack,
 } from '@chakra-ui/react';
@@ -41,7 +44,11 @@ function Tracking({ jobID, setJobID, startTime, batchMode, batchSize }) {
   const [logsCreated, setlogsCreated] = useState(0);
   const lastResponseRef = useRef({ time: 0, response: null });
   const [showChart, setShowChart] = useBoolean(startTime ? true : false);
-  const [lastJobId, setLastJobId] = useState('');
+  const [lastJob, setLastJob] = useState({
+    id: null,
+    status: 'Standby',
+    url: null,
+  });
 
   //conenct to socket once there is a new jobID
   useEffect(() => {
@@ -61,7 +68,7 @@ function Tracking({ jobID, setJobID, startTime, batchMode, batchSize }) {
       timeStamp: [],
       logRate: [],
     });
-    setLastJobId(jobID);
+    setLastJob({ id: jobID, status: 'Active', url: null });
 
     // set running on
     setRunning.on();
@@ -70,7 +77,7 @@ function Tracking({ jobID, setJobID, startTime, batchMode, batchSize }) {
     let stompClient = Stomp.over(
       () => new SockJS(process.env.REACT_APP_SOCKET_URL)
     );
-    stompClient.debug = () => {}; //disables stomp debug console logs
+    //stompClient.debug = () => {}; //disables stomp debug console logs
     stompClient.connect({}, function (frame) {
       stompClient.subscribe('/topic/job/' + jobID, function (response) {
         // parse response
@@ -115,6 +122,20 @@ function Tracking({ jobID, setJobID, startTime, batchMode, batchSize }) {
           }));
         }
 
+        // if job completed, set job to completed and return
+        if (response.status !== 'ACTIVE') {
+          setRunning.off();
+          setLoading.off();
+          setLastJob({
+            id: jobID,
+            status:
+              response.status.charAt(0).toUpperCase() +
+              response.status.slice(1).toLowerCase(),
+            url: response.url,
+          });
+          setJobID(null);
+        }
+
         // update last response ref
         lastResponseRef.current.response = response;
         lastResponseRef.current.time = Date.now();
@@ -126,7 +147,15 @@ function Tracking({ jobID, setJobID, startTime, batchMode, batchSize }) {
       // deactivate socket
       stompClient.deactivate();
     };
-  }, [jobID, setRunning, setData, setShowChart, startTime]);
+  }, [
+    jobID,
+    startTime,
+    setJobID,
+    setRunning,
+    setData,
+    setShowChart,
+    setLoading,
+  ]);
 
   // uptime and active intervals while job is running
   useEffect(() => {
@@ -180,22 +209,32 @@ function Tracking({ jobID, setJobID, startTime, batchMode, batchSize }) {
       .then(data => {
         console.log(data);
         setRunning.off();
-        setJobID(null);
       })
-      .catch(err => alert(err))
-      .finally(() => setLoading.off());
+      .catch(err => {
+        setLoading.off();
+        alert(err);
+      });
   };
 
   return (
     <div>
       <HStack justify="space-between">
         <VStack spacing="0.1em" align="start">
-          <Text>{running ? 'Running' : 'Standby'}</Text>
-          {lastJobId && <Text>Job id: {lastJobId}</Text>}
+          <Text>{lastJob.status}</Text>
+          {lastJob.id && <Text>Job id: {lastJob.id}</Text>}
 
           <Text>Uptime: {secondsToTimeString(uptime)}</Text>
           {batchSize && <Text>Batch Size: {batchSize}</Text>}
-          <Text>Logs created: {logsCreated}</Text>
+          <HStack>
+            <Text>Logs created: {logsCreated}</Text>
+            {lastJob.url && (
+              <Link href={lastJob.url} isExternal>
+                <Tooltip label="Download">
+                  <DownloadIcon mx="2px" />
+                </Tooltip>
+              </Link>
+            )}
+          </HStack>
         </VStack>
         <Box pr="12%">
           <Button
