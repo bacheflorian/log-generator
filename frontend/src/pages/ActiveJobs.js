@@ -14,12 +14,8 @@ function displayActiveJobs(
     return (
       <Flex wrap="wrap" rowGap="3em" gap="7%">
         {jobs.map(job => (
-          <Box minW="20em">
-            <ActiveJob
-              job={job}
-              batchMode={batchMode}
-              key={job.jobId.toString()}
-            />
+          <Box key={job.jobId.toString()} minW="20em">
+            <ActiveJob job={job} batchMode={batchMode} />
           </Box>
         ))}
       </Flex>

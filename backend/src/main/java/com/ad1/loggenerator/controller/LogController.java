@@ -201,7 +201,7 @@ public class LogController {
     }
 
     // test for streaming to addresss
-    @PostMapping("stream/toAddress")
+    @PostMapping("/stream/toAddress")
     public ResponseEntity<String> addressStream(@RequestBody JSONObject streamData) {
         System.out.println(streamData);
         return new ResponseEntity<>("Data successfully received.", HttpStatus.OK);

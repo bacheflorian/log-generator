@@ -51,16 +51,17 @@ public class BatchTrackerService {
 
         BatchTracker job = null;
         String destination = "/topic/job";
-        LogMessage message = new LogMessage();
 
         while (activeJobsList.size() > 0) {
+
+            Thread.sleep(millsecondsPerMessage);
 
             for (String jobId : activeJobsList.keySet()) {
                 job = activeJobsList.get(jobId);
 
-                message.setLogLineCount(job.getLogCount());
-                message.setTimeStamp(System.currentTimeMillis());
-                template.convertAndSend(destination + "/" + jobId, message);
+                template.convertAndSend(destination + "/" + job.getJobId(),
+                        new LogMessage(job.getStatus(), job.getLogCount(),
+                                System.currentTimeMillis(), job.getBatchObjectURL()));
 
                 // Check if the job has been marked not active to remove it
                 // from the active jobs list
@@ -68,8 +69,6 @@ public class BatchTrackerService {
                     setBatchJobToCompleted(job);
                 }
             }
-
-            Thread.sleep(millsecondsPerMessage);
         }
     }
 

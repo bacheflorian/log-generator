@@ -4,6 +4,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Set;
 import java.util.UUID;
 
 import org.json.simple.JSONObject;
@@ -56,7 +57,8 @@ public class BatchService {
             FileWriter fileWriter = new FileWriter(filename);
 
             // remove fields that should not be included in custom logs
-            logService.removeExcludedFields(selectionModel.getCustomLogs(), selectionModel);
+            logService.preProcessCustomLogs(selectionModel.getCustomLogs(), selectionModel);
+            Set<String> masterFieldList = logService.getMasterFieldsList(selectionModel.getCustomLogs());
 
             // write a [ to begin the log file
             fileWriter.write("[");
@@ -70,7 +72,7 @@ public class BatchService {
                         fileWriter.write(",\n");
                     }
 
-                    JSONObject logLine = logService.generateLogLine(selectionModel);
+                    JSONObject logLine = logService.generateLogLine(selectionModel, masterFieldList);
                     fileWriter.write(logLine.toString());
                     batchJobTracker.setLogCount(batchJobTracker.getLogCount() + 1);
 

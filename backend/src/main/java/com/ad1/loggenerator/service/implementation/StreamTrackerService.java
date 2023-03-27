@@ -58,21 +58,25 @@ public class StreamTrackerService {
 
         while (activeJobsList.size() > 0) {
 
+            Thread.sleep(millsecondsPerMessage);
+
             for (String jobId : activeJobsList.keySet()) {
                 StreamTracker job = activeJobsList.get(jobId);
 
                 sendStreamData(job);
 
-                if (job.getLastPing() + secondsTimeOut < System.currentTimeMillis() / 1000) {
-                    job.setStatus(JobStatus.CANCELLED);
-                }
+                // Optional: Cancel job if ping not recieved during secondsTimeOut
+                /*
+                 * if (job.getLastPing() + secondsTimeOut < System.currentTimeMillis() / 1000) {
+                 * job.setStatus(JobStatus.CANCELLED);
+                 * }
+                 */
 
                 if (job.getStatus() != JobStatus.ACTIVE) {
                     setStreamJobToCompleted(job);
                 }
             }
 
-            Thread.sleep(millsecondsPerMessage);
         }
 
     }
@@ -89,13 +93,11 @@ public class StreamTrackerService {
         }
 
         String destination = "/topic/job";
-        LogMessage message = new LogMessage();
 
         if (job != null) {
-            message.setLogLineCount(job.getLogCount());
-            message.setTimeStamp(System.currentTimeMillis());
-
-            template.convertAndSend(destination + "/" + job.getJobId(), message);
+            template.convertAndSend(destination + "/" + job.getJobId(),
+                    new LogMessage(job.getStatus(), job.getLogCount(),
+                            System.currentTimeMillis(), job.getStreamObjectURL()));
         }
     }
 
@@ -184,6 +186,5 @@ public class StreamTrackerService {
     public StreamTracker getStreamJobTracker(String jobId) {
         return historyJobsList.get(jobId);
     }
-
 
 }
