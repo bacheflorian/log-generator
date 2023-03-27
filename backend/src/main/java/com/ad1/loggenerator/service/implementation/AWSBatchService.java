@@ -9,9 +9,7 @@ import com.ad1.loggenerator.service.AWSLogService;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.S3Object;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -21,10 +19,11 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Set;
 
-@Service
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
+@Service
 public class AWSBatchService {
     @Autowired
     private LogService logService;

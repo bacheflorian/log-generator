@@ -8,9 +8,7 @@ import com.ad1.loggenerator.service.AWSLogService;
 import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -20,7 +18,8 @@ import java.io.*;
 import java.net.URL;
 import java.util.Set;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Service
@@ -184,6 +183,8 @@ public class AWSStreamService {
         // Count the log lines saved to the bucket object, set url and the log count to the stream job tracker
         streamJobTracker.setLogCount(awsLogService.getLogCount(s3Client, s3Object, bucketName, key));
         streamJobTracker.setStreamObjectURL(objectURL);
+        if (streamJobTracker.getStreamObjectURL() == null)
+            streamJobTracker.setStatus(JobStatus.FAILED);
     }
 
 }

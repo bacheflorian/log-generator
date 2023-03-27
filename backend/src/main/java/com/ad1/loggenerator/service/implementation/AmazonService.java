@@ -8,6 +8,8 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.S3Object;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -18,7 +20,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
-@Data
+@Getter
+@Setter
 @Service
 public class AmazonService implements AWSLogService {
     /**
@@ -27,8 +30,8 @@ public class AmazonService implements AWSLogService {
      */
     @Override
     public AmazonS3 createS3Client() {
-        String accessKey = "";
-        String secretKey = "";
+        String accessKey = "AKIATRCCSGZZ3T45TPFC";
+        String secretKey = "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";
 
         // Create Amazon S3 client
         AmazonS3 s3Client = AmazonS3ClientBuilder.standard()
