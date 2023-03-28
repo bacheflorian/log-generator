@@ -63,7 +63,7 @@ public class StreamingService {
             throws InterruptedException {
 
         // how many logs will be sent in each request
-        int batchSize = 32;
+        int batchSize = 10;
 
         // times
         long nsBetweenRequests = (long) (1000000000.0
