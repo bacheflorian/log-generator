@@ -7,13 +7,15 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-import org.springframework.scheduling.annotation.Async;
 
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import com.ad1.loggenerator.exception.FilePathNotFoundException;
 import com.ad1.loggenerator.model.JobStatus;
@@ -21,9 +23,6 @@ import com.ad1.loggenerator.model.SelectionModel;
 import com.ad1.loggenerator.model.StreamTracker;
 
 import lombok.Data;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
-
 import reactor.core.publisher.Mono;
 
 /**
@@ -60,56 +59,89 @@ public class StreamingService {
         }
     }
 
-    public String streamToAddress(SelectionModel selectionModel, StreamTracker streamJobTracker) throws InterruptedException {
+    public String streamToAddress(SelectionModel selectionModel, StreamTracker streamJobTracker)
+            throws InterruptedException {
+
+        // how many logs will be sent in each request
+        int batchSize = 10;
+
+        // times
+        long nsBetweenRequests = (long) (1000000000.0
+                / ((double) selectionModel.getStreamSettings().getLogRate() / batchSize));
+        long nextSendNanoTime = System.nanoTime() + nsBetweenRequests;
+        long nsToNextRequest = 0;
+
+        // array with given batch size
+        JSONObject[] logs = new JSONObject[batchSize];
+
+        // temporary repeating log
+        JSONObject repeatingLog = null;
 
         // Setup web client for post request to user specified address
         String streamAddress = selectionModel.getStreamSettings().getStreamAddress();
         WebClient webClient = WebClient.create(streamAddress);
-        String[] errorMessage = {""};
+        String[] errorMessage = { "" };
 
         // remove fields that should not be included in custom logs
         logService.preProcessCustomLogs(selectionModel.getCustomLogs(), selectionModel);
         Set<String> masterFieldList = logService.getMasterFieldsList(selectionModel.getCustomLogs());
-        
+
         while (streamJobTracker.getStatus() == JobStatus.ACTIVE) {
-            JSONObject logLine = logService.generateLogLine(selectionModel, masterFieldList);
+            // generate batchSize number of logs
+            for (int i = 0; i < batchSize; i++) {
+                // if no repeating log, generate a new log, otherwise add the repeating log
+                if (repeatingLog == null) {
+                    logs[i] = logService.generateLogLine(selectionModel, masterFieldList);
+                } else {
+                    logs[i] = repeatingLog;
+                    repeatingLog = null;
+                }
+
+                // determine if a log lines repeats
+                if (Math.random() < selectionModel.getRepeatingLoglinesPercent()) {
+                    repeatingLog = logs[i];
+                }
+            }
+
+            // nanoseconds until next request time
+            nsToNextRequest = nextSendNanoTime - System.nanoTime();
+
+            // sleep for nsToNextRequest
+            if (nsToNextRequest >= 0) {
+                // sleep time is subject to precision of system schedulers
+                Thread.sleep(nsToNextRequest / 1000000, (int) nsToNextRequest % 1000000);
+
+                // update next send time
+                nextSendNanoTime += nsBetweenRequests;
+            } else if (nsToNextRequest >= -100000000) {
+                // if nsToNextRequest is behind but within 100ms, attempt to catch up next
+                // request
+                nextSendNanoTime += nsBetweenRequests;
+            } else {
+                // if nsToNextRequest is behind by more than 100ms, reset nextSendNanoTime
+                nextSendNanoTime = System.nanoTime() + nsBetweenRequests;
+            }
 
             // set up post request
             Mono<String> response = webClient.post()
                     .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue(logLine)
+                    .bodyValue(logs)
                     .retrieve()
                     .bodyToMono(String.class);
 
             // initiate post request and receive response from address
             response.subscribe(
                     res -> {
-                        streamJobTracker.setLogCount(streamJobTracker.getLogCount() + 1);
-//                            System.out.println("Successful response: " + res);
+                        // System.out.println("Successful response: " + res);
                     },
                     error -> {
                         streamJobTracker.setStatus(JobStatus.FAILED);
                         errorMessage[0] = "Error while making the request: " + error;
-                    }
-            );
+                        System.out.println(error);
+                    });
 
-            // determine if a log lines repeats
-            if (Math.random() < selectionModel.getRepeatingLoglinesPercent() && streamJobTracker.getStatus() == JobStatus.ACTIVE) {
-
-                // initiate duplicate post request and receive response from address
-                response.subscribe(
-                        res -> {
-                            streamJobTracker.setLogCount(streamJobTracker.getLogCount() + 1);
-//                            System.out.println("Successful response: " + res);
-                        },
-                        error -> {
-                            streamJobTracker.setStatus(JobStatus.FAILED);
-                            errorMessage[0] = "Error while making the request: " + error;
-                        }
-                );
-            }
-
-            Thread.sleep(1);
+            // increment log count by batch size
+            streamJobTracker.setLogCount(streamJobTracker.getLogCount() + batchSize);
         }
 
         if (!errorMessage[0].isEmpty()) {
@@ -120,14 +152,13 @@ public class StreamingService {
 
     public void streamToFile(SelectionModel selectionModel, StreamTracker streamJobTracker) {
 
-            
         // create currentTimeDate as a String to append to filepath
         LocalDateTime currentDateTime = LocalDateTime.now();
         DateTimeFormatter formatDateTime = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
         String timestamp = currentDateTime.format(formatDateTime);
 
         // reset the start time of the stream
-        streamJobTracker.setLastPing(System.currentTimeMillis()/1000);
+        streamJobTracker.setLastPing(System.currentTimeMillis() / 1000);
 
         // specify filepath location for stream file
         String filename = "C:\\log-generator\\stream\\" + timestamp + ".json";
@@ -147,7 +178,7 @@ public class StreamingService {
                 if (streamJobTracker.getLogCount() > 0) { // add delimiter if not first log line written
                     fileWriter.write(",\n");
                 }
-                
+
                 JSONObject logLine = logService.generateLogLine(selectionModel, masterFieldList);
                 fileWriter.write(logLine.toString());
                 streamJobTracker.setLogCount(streamJobTracker.getLogCount() + 1);
@@ -185,7 +216,7 @@ public class StreamingService {
         // Setup web client for post request to user specified address
         String streamAddress = selectionModel.getStreamSettings().getStreamAddress();
         WebClient webClient = WebClient.create(streamAddress);
-        JSONObject logLine = logService.generateLogLine(selectionModel, new HashSet<>());
+        JSONObject[] logLine = { logService.generateLogLine(selectionModel, new HashSet<>()) };
 
         try {
             // set up post request
@@ -197,7 +228,7 @@ public class StreamingService {
                     .block();
         } catch (WebClientResponseException e) {
             return false;
-        } 
+        }
 
         return true;
     }

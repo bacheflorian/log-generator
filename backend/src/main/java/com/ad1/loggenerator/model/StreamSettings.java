@@ -11,6 +11,9 @@ public class StreamSettings {
     // address to stream logs to
     private String streamAddress;
 
+    // target number of logs per second to stream
+    private int logRate;
+
     // if generated logs should be saved
     private boolean saveLogs;
 }

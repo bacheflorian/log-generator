@@ -9,6 +9,7 @@ import {
   HStack,
   Input,
   InputGroup,
+  InputRightAddon,
   InputRightElement,
   NumberInput,
   NumberInputField,
@@ -129,6 +130,7 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
         mode: 'Stream',
         streamSettings: {
           streamAddress: '',
+          logRate: 300,
           saveLogs: false,
         },
         batchSettings: {
@@ -233,7 +235,7 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
     >
       {props => (
         <Form>
-          <VStack spacing="1.1em" align="flex-start">
+          <VStack spacing="1em" align="flex-start">
             <Field name="repeatingLoglinesPercent">
               {({ field, form }) => (
                 <FormControl isInvalid={form.errors.repeatingLoglinesPercent}>
@@ -262,7 +264,7 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
               )}
             </Field>
             <FormControl w="26em">
-              <FormLabel mb="0">Field Settings:</FormLabel>
+              <FormLabel mb="0">Field Settings</FormLabel>
               <HStack w="67%" justify="space-between" pt="0.25em" pb="0.25em">
                 <Tooltip label="Select fields to include" placement="right">
                   <Text fontWeight="500" pl="0.25em">
@@ -270,7 +272,7 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
                   </Text>
                 </Tooltip>
                 <Tooltip
-                  label="All fields will be randomly generated unless values are specified. To provide multiple values separate them with a comma."
+                  label="Each field will be randomly generated unless values are specified. To provide multiple values separate them with a comma."
                   placement="top-start"
                 >
                   <HStack>
@@ -298,7 +300,7 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
             <Field name="customLogs">
               {({ field, form, meta }) => (
                 <FormControl isInvalid={meta.error}>
-                  <FormLabel>Custom Logs:</FormLabel>
+                  <FormLabel>Custom Logs</FormLabel>
                   <VStack align="start">
                     <HStack spacing="1.5em">
                       <Text fontWeight="medium">{field.value.length}</Text>
@@ -352,6 +354,25 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
                     >
                       <FormLabel>Stream Address</FormLabel>
                       <Input {...field} placeholder="Stream address" />
+                      <FormErrorMessage>{meta.error}</FormErrorMessage>
+                    </FormControl>
+                  )}
+                </Field>
+                <Field name="streamSettings.logRate">
+                  {({ field, form, meta }) => (
+                    <FormControl isInvalid={meta.touched && meta.error}>
+                      <FormLabel>Log Rate</FormLabel>
+                      <InputGroup maxW="12em">
+                        <NumberInput
+                          min={-1}
+                          max={1000000000}
+                          precision={0}
+                          onChange={val => form.setFieldValue(field.name, val)}
+                        >
+                          <NumberInputField placeholder={field.value} />
+                        </NumberInput>
+                        <InputRightAddon children="logs/s" />
+                      </InputGroup>
                       <FormErrorMessage>{meta.error}</FormErrorMessage>
                     </FormControl>
                   )}
