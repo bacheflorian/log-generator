@@ -2,6 +2,7 @@ package com.ad1.loggenerator.service;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.S3Object;
+import lombok.NoArgsConstructor;
 
 import java.io.IOException;
 

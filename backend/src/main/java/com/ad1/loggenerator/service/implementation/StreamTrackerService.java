@@ -75,6 +75,7 @@ public class StreamTrackerService {
                 if (job.getStatus() != JobStatus.ACTIVE) {
                     setStreamJobToCompleted(job);
                 }
+
             }
 
         }
