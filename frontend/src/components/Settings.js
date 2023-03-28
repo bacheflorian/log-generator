@@ -9,6 +9,7 @@ import {
   HStack,
   Input,
   InputGroup,
+  InputRightAddon,
   InputRightElement,
   NumberInput,
   NumberInputField,
@@ -129,6 +130,7 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
         mode: 'Stream',
         streamSettings: {
           streamAddress: '',
+          logRate: 320,
           saveLogs: false,
         },
         batchSettings: {
@@ -352,6 +354,25 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
                     >
                       <FormLabel>Stream Address</FormLabel>
                       <Input {...field} placeholder="Stream address" />
+                      <FormErrorMessage>{meta.error}</FormErrorMessage>
+                    </FormControl>
+                  )}
+                </Field>
+                <Field name="streamSettings.logRate">
+                  {({ field, form, meta }) => (
+                    <FormControl isInvalid={meta.touched && meta.error}>
+                      <FormLabel>Log Rate</FormLabel>
+                      <InputGroup maxW="12em">
+                        <NumberInput
+                          min={-1}
+                          max={1000000000}
+                          precision={0}
+                          onChange={val => form.setFieldValue(field.name, val)}
+                        >
+                          <NumberInputField placeholder={field.value} />
+                        </NumberInput>
+                        <InputRightAddon children="logs/s" />
+                      </InputGroup>
                       <FormErrorMessage>{meta.error}</FormErrorMessage>
                     </FormControl>
                   )}
