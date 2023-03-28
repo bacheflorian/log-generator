@@ -88,6 +88,7 @@ function Tracking({ jobID, setJobID, startTime, batchMode, batchSize }) {
 
         // update chart data
         if (!lastResponseRef.current.response) {
+          // first response
           if (!startTime) {
             // set initial data
             if (response.logLineCount === 0) {
@@ -108,6 +109,7 @@ function Tracking({ jobID, setJobID, startTime, batchMode, batchSize }) {
           // show chart once first data recieved
           setShowChart.on();
         } else {
+          // ongoing response
           const logRate = Math.round(
             (response.logLineCount -
               lastResponseRef.current.response.logLineCount) /
@@ -170,7 +172,14 @@ function Tracking({ jobID, setJobID, startTime, batchMode, batchSize }) {
       // interval to timeout socket
       activeInterval = setInterval(() => {
         if (Number(Date.now() - lastResponseRef.current.time) > 2500) {
+          // time out job
           setRunning.off();
+          setLoading.off();
+          setLastJob({
+            id: jobID,
+            status: 'Timed out',
+            url: null,
+          });
           setJobID(null);
         }
       }, 1000);
@@ -184,7 +193,7 @@ function Tracking({ jobID, setJobID, startTime, batchMode, batchSize }) {
       clearInterval(timerInterval);
       clearInterval(activeInterval);
     };
-  }, [running, setRunning, setJobID]);
+  }, [running, setRunning, setJobID, jobID, setLastJob, setLoading]);
 
   // handle cancel button
   const handleCancel = () => {
