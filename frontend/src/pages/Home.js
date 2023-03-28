@@ -23,7 +23,7 @@ function Home() {
       </Box>
       <Spacer />
       <Box maxW="40em" minW="20em" flex="2">
-        <Heading as="h4" size="sm" ml="-1em" pb="1.5em">
+        <Heading as="h4" size="sm" ml="-1em" pb="1.25em">
           Status
         </Heading>
         <Tracking
