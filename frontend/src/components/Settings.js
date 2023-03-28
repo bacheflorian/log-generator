@@ -130,7 +130,7 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
         mode: 'Stream',
         streamSettings: {
           streamAddress: '',
-          logRate: 320,
+          logRate: 300,
           saveLogs: false,
         },
         batchSettings: {
@@ -235,7 +235,7 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
     >
       {props => (
         <Form>
-          <VStack spacing="1.1em" align="flex-start">
+          <VStack spacing="1em" align="flex-start">
             <Field name="repeatingLoglinesPercent">
               {({ field, form }) => (
                 <FormControl isInvalid={form.errors.repeatingLoglinesPercent}>
@@ -264,7 +264,7 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
               )}
             </Field>
             <FormControl w="26em">
-              <FormLabel mb="0">Field Settings:</FormLabel>
+              <FormLabel mb="0">Field Settings</FormLabel>
               <HStack w="67%" justify="space-between" pt="0.25em" pb="0.25em">
                 <Tooltip label="Select fields to include" placement="right">
                   <Text fontWeight="500" pl="0.25em">
@@ -272,7 +272,7 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
                   </Text>
                 </Tooltip>
                 <Tooltip
-                  label="All fields will be randomly generated unless values are specified. To provide multiple values separate them with a comma."
+                  label="Each field will be randomly generated unless values are specified. To provide multiple values separate them with a comma."
                   placement="top-start"
                 >
                   <HStack>
@@ -300,7 +300,7 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
             <Field name="customLogs">
               {({ field, form, meta }) => (
                 <FormControl isInvalid={meta.error}>
-                  <FormLabel>Custom Logs:</FormLabel>
+                  <FormLabel>Custom Logs</FormLabel>
                   <VStack align="start">
                     <HStack spacing="1.5em">
                       <Text fontWeight="medium">{field.value.length}</Text>

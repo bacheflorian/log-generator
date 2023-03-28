@@ -9,7 +9,7 @@ function Home() {
   const [batchSize, setBatchSize] = useState(null);
 
   return (
-    <Flex alignItems="start" p="2em 7% 1.5em 18%" wrap="wrap" rowGap="3em">
+    <Flex alignItems="start" p="2em 7% 2em 18%" wrap="wrap" rowGap="3em">
       <Box minW="15em">
         <Heading as="h4" size="sm" ml="-1em" pb="0.5em">
           Options
