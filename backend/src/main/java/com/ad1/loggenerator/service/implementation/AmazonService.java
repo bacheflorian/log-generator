@@ -8,6 +8,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.S3Object;
 import lombok.Data;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -21,14 +22,23 @@ import java.util.UUID;
 @Data
 @Service
 public class AmazonService implements AWSLogService {
+
+    // Credentials for S3 bucket
+    @Value("${aws.accessKeyId}")
+    private String accessKey;
+
+    @Value("${aws.secretAccessKey}")
+    private String secretKey;
+
     /**
      * Method to create AmazonS3 client
      * @return s3 client
      */
     @Override
     public AmazonS3 createS3Client() {
-        String accessKey = "";
-        String secretKey = "";
+        // Add credentials manually for local deployment only
+//        String accessKey = "";
+//        String secretKey = "";
 
         // Create Amazon S3 client
         AmazonS3 s3Client = AmazonS3ClientBuilder.standard()
