@@ -22,23 +22,15 @@ import java.util.UUID;
 @Data
 @Service
 public class AmazonService implements AWSLogService {
-
-    // Credentials for S3 bucket
-    @Value("${aws.accessKeyId}")
-    private String accessKey;
-
-    @Value("${aws.secretAccessKey}")
-    private String secretKey;
-
     /**
      * Method to create AmazonS3 client
      * @return s3 client
      */
     @Override
     public AmazonS3 createS3Client() {
-        // Add credentials manually for local deployment only
-//        String accessKey = "";
-//        String secretKey = "";
+
+        String accessKey = System.getenv("accessKey");
+        String secretKey = System.getenv("secretKey");
 
         // Create Amazon S3 client
         AmazonS3 s3Client = AmazonS3ClientBuilder.standard()
