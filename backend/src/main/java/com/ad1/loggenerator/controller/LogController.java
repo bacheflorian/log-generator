@@ -1,16 +1,21 @@
 package com.ad1.loggenerator.controller;
 
-import com.ad1.loggenerator.service.AWSLogService;
-import com.ad1.loggenerator.service.implementation.*;
-
-import jakarta.validation.Valid;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
 
 import org.json.simple.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.ad1.loggenerator.exception.JobNotFoundException;
 import com.ad1.loggenerator.model.AllJobMetrics;
@@ -21,11 +26,15 @@ import com.ad1.loggenerator.model.JobStatus;
 import com.ad1.loggenerator.model.SelectionModel;
 import com.ad1.loggenerator.model.StreamJobMetrics;
 import com.ad1.loggenerator.model.StreamTracker;
+import com.ad1.loggenerator.service.AWSLogService;
+import com.ad1.loggenerator.service.implementation.AWSBatchService;
+import com.ad1.loggenerator.service.implementation.AWSStreamService;
+import com.ad1.loggenerator.service.implementation.BatchTrackerService;
+import com.ad1.loggenerator.service.implementation.StatisticsUtilitiesService;
+import com.ad1.loggenerator.service.implementation.StreamTrackerService;
 
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-
-import java.io.IOException;
-import java.net.URL;
 
 /**
  * Receives user requests and returns responses via REST API
@@ -45,6 +54,7 @@ public class LogController {
 
     /**
      * Method to generate log files in batch mode to AWS s3
+     * 
      * @param selectionModel
      * @return jobId
      * @throws InterruptedException
@@ -57,16 +67,14 @@ public class LogController {
             String jobId = awsLogService.generateJobId();
             URL objectURL = null;
             selectionModel.setJobId(jobId);
-            BatchTracker batchJobTracker =
-                    new BatchTracker(
-                            jobId,
-                            0,
-                            selectionModel.getBatchSettings().getNumberOfLogs(),
-                            System.currentTimeMillis() / 1000,
-                            -1,
-                            objectURL,
-                            JobStatus.ACTIVE
-                    );
+            BatchTracker batchJobTracker = new BatchTracker(
+                    jobId,
+                    0,
+                    selectionModel.getBatchSettings().getNumberOfLogs(),
+                    System.currentTimeMillis() / 1000,
+                    -1,
+                    objectURL,
+                    JobStatus.ACTIVE);
             awsbatchService.upLoadBatchLogsToS3(selectionModel, batchJobTracker);
             batchServiceTracker.addNewJob(batchJobTracker);
             if (batchServiceTracker.getActiveJobsListSize() == 1) {
@@ -80,6 +88,7 @@ public class LogController {
 
     /**
      * Method to stream log files continuously to AWS s3
+     * 
      * @param selectionModel
      * @return jobId
      * @throws InterruptedException
@@ -100,8 +109,7 @@ public class LogController {
                     JobStatus.ACTIVE,
                     System.currentTimeMillis() / 1000,
                     -1,
-                    objectURL
-            );
+                    objectURL);
             awsStreamService.streamToS3(selectionModel, streamJobTracker);
             streamServiceTracker.addNewJob(streamJobTracker);
             if (streamServiceTracker.getActiveJobsListSize() == 1) {
@@ -114,7 +122,9 @@ public class LogController {
     }
 
     /**
-     * Method to stream log files to AWS S3 in specified buffer size (current default is 20MB)
+     * Method to stream log files to AWS S3 in specified buffer size (current
+     * default is 20MB)
+     * 
      * @param selectionModel
      * @return jobId
      * @throws InterruptedException
@@ -135,8 +145,7 @@ public class LogController {
                     JobStatus.ACTIVE,
                     System.currentTimeMillis() / 1000,
                     -1,
-                    objectURL
-            );
+                    objectURL);
             awsStreamService.streamToS3Buffer(selectionModel, streamJobTracker);
             streamServiceTracker.addNewJob(streamJobTracker);
             if (streamServiceTracker.getActiveJobsListSize() == 1) {
@@ -202,13 +211,14 @@ public class LogController {
 
     // test for streaming to addresss
     @PostMapping("/stream/toAddress")
-    public ResponseEntity<String> addressStream(@RequestBody JSONObject streamData) {
-        System.out.println(streamData);
+    public ResponseEntity<String> addressStream(@RequestBody ArrayList<JSONObject> streamData) {
+        // System.out.println(streamData);
         return new ResponseEntity<>("Data successfully received.", HttpStatus.OK);
     }
 
     /**
      * Method to get metrics for a batch job
+     * 
      * @return
      */
     @GetMapping("/stats/batch/{jobId}")
@@ -224,6 +234,7 @@ public class LogController {
 
     /**
      * Method to get metrics for a stream job
+     * 
      * @return
      */
     @GetMapping("/stats/stream/{jobId}")
@@ -238,8 +249,9 @@ public class LogController {
     }
 
     /**
-     * Method to get metrics of all running and completed 
+     * Method to get metrics of all running and completed
      * batch and stream jobs.
+     * 
      * @return
      */
     @GetMapping("/stats")

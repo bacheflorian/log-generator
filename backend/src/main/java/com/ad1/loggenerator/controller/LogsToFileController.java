@@ -1,18 +1,27 @@
 package com.ad1.loggenerator.controller;
 
-import com.ad1.loggenerator.exception.AddressNotFoundException;
-import com.ad1.loggenerator.model.*;
-import com.ad1.loggenerator.service.implementation.*;
-
-import jakarta.validation.Valid;
-
-import lombok.AllArgsConstructor;
+import java.net.URL;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.net.URL;
+import com.ad1.loggenerator.exception.AddressNotFoundException;
+import com.ad1.loggenerator.model.BatchTracker;
+import com.ad1.loggenerator.model.JobStatus;
+import com.ad1.loggenerator.model.SelectionModel;
+import com.ad1.loggenerator.model.StreamTracker;
+import com.ad1.loggenerator.service.implementation.BatchService;
+import com.ad1.loggenerator.service.implementation.BatchTrackerService;
+import com.ad1.loggenerator.service.implementation.StreamTrackerService;
+import com.ad1.loggenerator.service.implementation.StreamingService;
+
+import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 
 /**
  * Receives user requests and returns responses via REST API
@@ -28,7 +37,6 @@ public class LogsToFileController {
     private final StreamingService streamingService;
     private final StreamTrackerService streamServiceTracker;
 
-
     // general request for generating batch files or streaming
     @PostMapping("/batch")
     public ResponseEntity<String> generateBatchRequest(
@@ -38,16 +46,14 @@ public class LogsToFileController {
         if (selectionModel.getMode().equals("Batch")) {
             String jobId = batchService.generateJobId();
             selectionModel.setJobId(jobId);
-            BatchTracker batchJobTracker =
-                    new BatchTracker(
-                            jobId,
-                            0,
-                            selectionModel.getBatchSettings().getNumberOfLogs(),
-                            System.currentTimeMillis() / 1000,
-                            -1,
-                            object,
-                            JobStatus.ACTIVE
-                    );
+            BatchTracker batchJobTracker = new BatchTracker(
+                    jobId,
+                    0,
+                    selectionModel.getBatchSettings().getNumberOfLogs(),
+                    System.currentTimeMillis() / 1000,
+                    -1,
+                    object,
+                    JobStatus.ACTIVE);
             batchService.batchMode(selectionModel, batchJobTracker);
             batchServiceTracker.addNewJob(batchJobTracker);
             if (batchServiceTracker.getActiveJobsListSize() == 1) {
@@ -58,7 +64,6 @@ public class LogsToFileController {
             return new ResponseEntity<>("Invalid Request. Try again", HttpStatus.BAD_REQUEST);
         }
     }
-
 
     @PostMapping("/stream")
     public ResponseEntity<String> generateStreamRequest(
@@ -71,11 +76,15 @@ public class LogsToFileController {
                 boolean isAddressAvailable = streamingService.isAddressAvailable(selectionModel);
                 if (!isAddressAvailable) {
                     throw new AddressNotFoundException("Stream address " +
-                        selectionModel.getStreamSettings().getStreamAddress() +
-                        " is not available."
-                    );
-                    
+                            selectionModel.getStreamSettings().getStreamAddress() +
+                            " is not available.");
+
                 }
+            }
+
+            // if lograte is negative, set it to max value
+            if (selectionModel.getStreamSettings().getLogRate() <= 0) {
+                selectionModel.getStreamSettings().setLogRate(Integer.MAX_VALUE);
             }
 
             String jobId = streamingService.generateJobId();
@@ -87,8 +96,7 @@ public class LogsToFileController {
                     JobStatus.ACTIVE,
                     System.currentTimeMillis() / 1000,
                     -1,
-                    object
-            );
+                    object);
             streamingService.streamMode(selectionModel, streamJobTracker);
             streamServiceTracker.addNewJob(streamJobTracker);
             if (streamServiceTracker.getActiveJobsListSize() == 1) {
