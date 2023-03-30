@@ -186,7 +186,7 @@ function Settings({ jobID, setJobID, setBatchMode, setBatchSize }) {
         // request address
         let address = process.env.REACT_APP_API_URL + 'generate/';
         if (values.mode === 'Batch') {
-          address = address + 'batch';
+          address = address + 'batch/s3';
         } else {
           address = address + 'stream';
         }

@@ -63,13 +63,14 @@ public class AWSBatchService {
 
                 JSONObject logLine = logService.generateLogLine(selectionModel, masterFieldList);
                 logLines.append(logLine.toString());
+                batchJobTracker.setLogCount(batchJobTracker.getLogCount() + 1);
 
                 // determine if a log lines repeats
                 if (Math.random() < selectionModel.getRepeatingLoglinesPercent()) {
                     logLines.append(",\n");
                     logLines.append(logLine.toString());
                     i++;
-//                    batchJobTracker.setLogCount(batchJobTracker.getLogCount() + 1);
+                    batchJobTracker.setLogCount(batchJobTracker.getLogCount() + 1);
                 }
             }
 
