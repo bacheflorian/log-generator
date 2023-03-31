@@ -207,6 +207,29 @@ public class LogController {
         return new ResponseEntity<>("Data successfully received.", HttpStatus.OK);
     }
 
+    // save log files request
+    @PostMapping("/stream/save/{jobId}")
+    public ResponseEntity<String> saveLogsToAWSS3(@PathVariable String jobId) throws IOException, InterruptedException {
+        URL objectURL = null;
+        streamServiceTracker.stopStreamJob(jobId);
+        StreamTracker streamJobTracker = new StreamTracker(
+                jobId,
+                0,
+                System.currentTimeMillis() / 1000,
+                JobStatus.ACTIVE,
+                System.currentTimeMillis() / 1000,
+                -1,
+                objectURL
+        );
+        awsStreamService.saveLogsToAWSS3(streamJobTracker);
+        streamServiceTracker.addNewJob(streamJobTracker);
+        if (streamServiceTracker.getActiveJobsListSize() == 1) {
+            streamServiceTracker.checkLastPings();
+        }
+        return new ResponseEntity<>("Loglines with corresponding jobId " + jobId + " saved successfully to AWS S3.", HttpStatus.OK);
+    }
+
+
     /**
      * Method to get metrics for a batch job
      * @return

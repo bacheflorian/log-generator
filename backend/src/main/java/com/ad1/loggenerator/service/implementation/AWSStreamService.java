@@ -176,5 +176,35 @@ public class AWSStreamService {
         }
     }
 
+    public void saveLogsToAWSS3(StreamTracker streamJobTracker) throws IOException {
+        // specify the s3 bucket and key for the log file
+        String bucketName = "stream-s3-log-generator";
+        String key = "stream/" + awsLogService.createCurrentTimeDate() + ".json";
+        // create s3 client instance
+        AmazonS3 s3Client = awsLogService.createS3Client();
+        // specify the local file path to upload
+        File tempLogFile = new File("temp.log");
+        if (!tempLogFile.exists()) {
+            throw new RuntimeException("temp log file do not exist");
+        }
+        try {
+            PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, key, tempLogFile);
+            s3Client.putObject(putObjectRequest);
+        } catch (SdkClientException e) {
+            // Mark the job as failed if exception occurred
+            streamJobTracker.setStatus(JobStatus.FAILED);
+            throw new AWSServiceNotAvailableException(e.getMessage());
+        }
+        //Make the s3 object public
+        s3Client.setObjectAcl(bucketName, key, CannedAccessControlList.PublicRead);
+        // Get the url of the s3 object and the s3 object itself
+        URL objectURL = s3Client.getUrl(bucketName, key);
+        S3Object s3Object = s3Client.getObject(bucketName, key);
+        // Count the log lines saved to the bucket object, set url and the log count to the stream job tracker
+        streamJobTracker.setLogCount(awsLogService.getLogCount(s3Client, s3Object, bucketName, key));
+        streamJobTracker.setStreamObjectURL(objectURL);
+        streamJobTracker.setStatus(JobStatus.COMPLETED);
+    }
+
 }
 

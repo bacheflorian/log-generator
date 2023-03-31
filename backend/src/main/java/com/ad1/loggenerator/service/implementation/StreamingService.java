@@ -1,5 +1,6 @@
 package com.ad1.loggenerator.service.implementation;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -70,7 +71,14 @@ public class StreamingService {
         // remove fields that should not be included in custom logs
         logService.preProcessCustomLogs(selectionModel.getCustomLogs(), selectionModel);
         Set<String> masterFieldList = logService.getMasterFieldsList(selectionModel.getCustomLogs());
-        
+
+        // temp file to save the log lines
+        File tempLogFile = new File("temp.log");
+        if (tempLogFile.exists()) {
+            tempLogFile.delete();
+        }
+
+
         while (streamJobTracker.getStatus() == JobStatus.ACTIVE) {
             JSONObject logLine = logService.generateLogLine(selectionModel, masterFieldList);
 
@@ -92,6 +100,19 @@ public class StreamingService {
                         errorMessage[0] = "Error while making the request: " + error;
                     }
             );
+
+            // Write the log lines to the temp log file
+            try {
+                // Check if the file exists, create a new one if it doesn't
+                if (!tempLogFile.exists()) {
+                    tempLogFile.createNewFile();
+                }
+                FileWriter fileWriter = new FileWriter(tempLogFile, true);
+                fileWriter.write(logLine.toString() + "\n");
+                fileWriter.close();
+            } catch (IOException e) {
+                throw new FilePathNotFoundException(e.getMessage());
+            }
 
             // determine if a log lines repeats
             if (Math.random() < selectionModel.getRepeatingLoglinesPercent() && streamJobTracker.getStatus() == JobStatus.ACTIVE) {
