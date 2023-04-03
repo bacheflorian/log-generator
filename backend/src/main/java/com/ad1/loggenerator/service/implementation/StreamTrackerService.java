@@ -72,7 +72,8 @@ public class StreamTrackerService {
                  * }
                  */
 
-                if (job.getStatus() != JobStatus.ACTIVE) {
+                // if job isn't active or stopping, remove from active jobs
+                if (job.getStatus() != JobStatus.ACTIVE && job.getStatus() != JobStatus.STOPPING) {
                     setStreamJobToCompleted(job);
                 }
 
@@ -134,7 +135,7 @@ public class StreamTrackerService {
             return false;
         }
 
-        streamTracker.setStatus(JobStatus.COMPLETED);
+        streamTracker.setStatus(JobStatus.STOPPING);
         return true;
     }
 
