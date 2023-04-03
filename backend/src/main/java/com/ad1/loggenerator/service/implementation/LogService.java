@@ -92,7 +92,7 @@ public class LogService {
         return logLineJSON;
     }
 
-    private void addMasterFieldList(JSONObject logLineJSON, Set<String> masterFieldList) {
+    public void addMasterFieldList(JSONObject logLineJSON, Set<String> masterFieldList) {
 
         for (String field: masterFieldList) {
             if (!logLineJSON.containsKey(field)) {
@@ -171,7 +171,16 @@ public class LogService {
 
         // Add each unique custom log field to the master list
         for (CustomLog customLog : customLogs) {
+            if (customLog == null) {
+                continue;
+            }
+
             Map<String, Object> fields = customLog.getFields();
+
+            if (fields == null) {
+                continue;
+            }
+            
             Set<String> fieldsList = fields.keySet();
             masterFieldList.addAll(fieldsList);
         }
@@ -187,7 +196,15 @@ public class LogService {
      * @param logLineJSON
      * @param customLog
      */
-    private void addCustomLogFields(JSONObject logLineJSON, CustomLog customLog) {
+    public void addCustomLogFields(JSONObject logLineJSON, CustomLog customLog) {
+
+        if (customLog == null) {
+            return;
+        }
+
+        if (logLineJSON == null) {
+            throw new IllegalArgumentException("logLineJSON is null");
+        }
 
         for (String key: customLog.getFields().keySet()) {
             logLineJSON.put(key, customLog.getFields().get(key));
@@ -203,8 +220,12 @@ public class LogService {
      * @param customLogs
      * @return
      */
-    private CustomLog chooseCustomLog(List<CustomLog> customLogs) {
+    public CustomLog chooseCustomLog(List<CustomLog> customLogs) {
         
+        if (customLogs == null) {
+            return null;
+        }
+
         // get a random value
         Random random = new Random();
         double randomDouble = random.nextDouble(1);
@@ -212,6 +233,11 @@ public class LogService {
         double lower = 0;
         double upper = 0;
         for (CustomLog customLog: customLogs) {
+
+            if (customLog == null) {
+                continue;
+            }
+
             upper += customLog.getFrequency();
             
             // return the custom log chosen
@@ -358,8 +384,8 @@ public class LogService {
      */
     public String generateRandomFilepath() {
         // random information
-        String[] folders = { "C:/Program Files", "C:/Windows", "C:/Program Files (x86)",
-                "C:/Program Files (x86)/Common Files", "/tmp", "/home" };
+        String[] folders = { "C:\\Program Files", "C:\\Windows", "C:\\Program Files (x86)",
+                "C:\\Program Files (x86)\\Common Files", "/tmp", "/home" };
         String[] ext = { ".pdf", ".xlsx", ".csv", ".txt", ".json", ".sys", ".docx", ".jpg", ".zip" };
 
         // get random path to file
