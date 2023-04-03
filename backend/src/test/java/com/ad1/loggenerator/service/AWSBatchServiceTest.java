@@ -151,21 +151,3 @@ public class AWSBatchServiceTest {
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
