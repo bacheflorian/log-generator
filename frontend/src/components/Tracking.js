@@ -124,10 +124,8 @@ function Tracking({ jobID, setJobID, startTime, batchMode, batchSize }) {
           }));
         }
 
-        // if job completed, set job to completed and return
+        // if job not active, update status
         if (response.status !== 'ACTIVE') {
-          setRunning.off();
-          setLoading.off();
           setLastJob({
             id: jobID,
             status:
@@ -135,7 +133,13 @@ function Tracking({ jobID, setJobID, startTime, batchMode, batchSize }) {
               response.status.slice(1).toLowerCase(),
             url: response.url,
           });
-          setJobID(null);
+
+          // if job isn't Active or Stopping, stop job
+          if (response.status !== 'STOPPING') {
+            setRunning.off();
+            setLoading.off();
+            setJobID(null);
+          }
         }
 
         // update last response ref
