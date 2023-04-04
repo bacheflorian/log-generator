@@ -138,8 +138,8 @@ function Tracking({ jobID, setJobID, startTime, batchMode, batchSize }) {
             url: response.url,
           });
 
-          // if job isn't Active or Stopping, stop job
-          if (response.status !== 'STOPPING') {
+          // if job isn't Active or Finalizing, stop job
+          if (response.status !== 'FINALIZING') {
             setRunning.off();
             setLoading.off();
             setJobID(null);

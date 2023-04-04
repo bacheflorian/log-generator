@@ -63,8 +63,8 @@ public class BatchTrackerService {
                         new LogMessage(job.getStatus(), job.getLogCount(),
                                 System.currentTimeMillis(), job.getBatchObjectURL()));
 
-                // if job isn't active or stopping, remove from active jobs
-                if (job.getStatus() != JobStatus.ACTIVE && job.getStatus() != JobStatus.STOPPING) {
+                // if job isn't active or finalizing, remove from active jobs
+                if (job.getStatus() != JobStatus.ACTIVE && job.getStatus() != JobStatus.FINALIZING) {
                     setBatchJobToCompleted(job);
                 }
             }
