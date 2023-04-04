@@ -9,7 +9,7 @@ import {
   useBoolean,
   VStack,
 } from '@chakra-ui/react';
-import { Stomp } from '@stomp/stompjs';
+import { Client } from '@stomp/stompjs';
 import { React, useEffect, useRef, useState } from 'react';
 import SockJS from 'sockjs-client';
 import Chart from './Chart';
@@ -73,12 +73,16 @@ function Tracking({ jobID, setJobID, startTime, batchMode, batchSize }) {
     // set running on
     setRunning.on();
 
-    // connect to socket
-    let stompClient = Stomp.over(
-      () => new SockJS(process.env.REACT_APP_SOCKET_URL)
-    );
-    //stompClient.debug = () => {}; //disables stomp debug console logs
-    stompClient.connect({}, function (frame) {
+    // create new socket using STOMP.js and SockJS
+    const stompClient = new Client({
+      webSocketFactory: () => new SockJS(process.env.REACT_APP_SOCKET_URL),
+      debug: function (str) {
+        console.log(str);
+      },
+    });
+
+    // on connect subscribe to the jobID
+    stompClient.onConnect = function (frame) {
       stompClient.subscribe('/topic/job/' + jobID, function (response) {
         // parse response
         response = JSON.parse(response.body);
@@ -146,7 +150,10 @@ function Tracking({ jobID, setJobID, startTime, batchMode, batchSize }) {
         lastResponseRef.current.response = response;
         lastResponseRef.current.time = Date.now();
       });
-    });
+    };
+
+    // connect to socket
+    stompClient.activate();
 
     // cleanup
     return () => {
