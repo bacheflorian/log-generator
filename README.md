@@ -9,18 +9,20 @@ Repository containing tools for generating semi-randomized computer telemetry (o
 - David Zarinski
 
 # deployment
-### Overview<br/>
+### Overview
 The full stack application is deployed via AWS ECS with self-managed EC2 instances using an automated Jenkins pipeline. Below is an overview of the steps required to do so:  
 - Dockerfiles are used to create docker images of both the frontend and backend. These images are uploaded to AWS Elastic Container Repository (ECR)
 - An Elastic Container Service (ECS) cluster is created and utilized as a container orchestration and management tool
 - The ECS deploys both the frontend and backend images to containers which run on two different EC2 instances
 
-### Implementation<br/>
-Configure AWS
-- ECR
+### Implementation
+#### Configure AWS 
+Prior to running the Jenkins pipeline, AWS must be configured as outlined below.<br/> 
+<b>Note:</b> These configuration steps only need to be completed once.
+- ECR (Elastic Container Repository)
   - Create lg-backend repository
   - Create lg-frontend repository
-- ECS
+- ECS (Elastic Container Service)
   - Create Cluster
     - EC2 Linux + Networking
       - Cluster name: ad1EcsCluster
@@ -44,6 +46,9 @@ Configure AWS
         - Container name: ad1-back
         - Image: copy lg-backend image URI from ECR (latest)
         - Port mappings: 8080:8080
+        - Environment variables
+          - S3 credentials: accessKey + secretKey
+          - EC2 instance URL: frontendURL
     - Create ad1-front task definition
       - Requires compatibilities
         - EC2
@@ -55,6 +60,8 @@ Configure AWS
         - Container name: ad1-front
         - Image: copy lg-frontend image URI from ECR (latest)
         - Port mappings: 80:3000
+        - Environment variables
+          - EC2 instance URL: backendURL
   - Services
     - Navigate to created cluster. Under Services tab click Create
         - Backend service
@@ -110,4 +117,33 @@ Configure AWS
       - Name instance frontend
       - Navigate to Elastic IPs - associate an IP with the EC2 instance
 
-Jenkins pipeline
+#### Configure Jenkins
+Jenkins must be configured to allow you to run the pipeline. <br/>
+<b>Note:</b> Jenkins must be installed on your system and the application launched. Download all standard plugins when prompted during install.
+1. Navigate to the port specified during installation (i.e., localhost:8080)
+2. Sign in with your credentials
+3. Navigate to `Dashboard`->`Manage Jenkins`->`Plugin Manager` and download the following plugins:
+   1. CloudBees AWS Credentials Plugin
+   2. Docker: Docker API, Commons, Pipeline and plugin Plugins
+   3. AWS: EC2 + SDK, ECR + SDK, ECS SDK and IAM SDK plugins
+4. Navigate to `Dashboard`->`Manage Jenkins`->`Credentials` and enter in the following credentials:
+   1. github_PAT
+   2. jenkins-aws-admin
+   3. jenkins-aws-s3
+5. In the dashboard click `New Item`, select `Pipeline` and enter a pipeline name (e.g., LogGenPipeline)
+6. Navigate to `Dashboard`->`LogGenPipeline`->`Configure` and enter the following configurations:
+   1. `GitHub project`->`Project url`: https://github.com/andymbwu/log-generator
+   2. `Pipeline`
+      1. `Definition`: Pipeline script from SCM
+      2. `SCM`: Git
+      3. `Repository URL`: https://github.com/andymbwu/log-generator
+      4. `Branches to build`->`Branch Specifier (blank for 'any')`: */main
+      5. `Script Path`: JenkinsFile
+
+#### Deploy the full stack application
+To deploy the full stack application for the first time or for future updates follow the steps outlined below:
+1. Open the Docker Desktop Application on your computer
+2. Launch Jenkins
+3. Run the pipeline by navigating to `Dashboard`->`LogGenPipeline` and selected `Build Now`
+
+
