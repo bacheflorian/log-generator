@@ -1,14 +1,14 @@
-# log-generator
+# Random Log Generator
 Repository containing tools for generating semi-randomized computer telemetry (or log data)
 
-# team-members
-- Andy Wu
+# Team Members
 - Chinwe Ajieh
 - Florian Bache
 - Ling Lee
 - David Zarinski
+- Advisor: Andy Wu
 
-# deployment
+# Deployment
 ### Overview
 The full stack application is deployed via AWS ECS with self-managed EC2 instances using an automated Jenkins pipeline. Below is an overview of the steps required to do so:  
 - Dockerfiles are used to create docker images of both the frontend and backend. These images are uploaded to AWS Elastic Container Repository (ECR)
@@ -145,5 +145,47 @@ To deploy the full stack application for the first time or for future updates fo
 1. Open the Docker Desktop Application on your computer
 2. Launch Jenkins
 3. Run the pipeline by navigating to `Dashboard`->`LogGenPipeline` and selected `Build Now`
+![Jenkins1](images/jenkins_buildNow.png)
+4. The full stack application is now launched and can be accessed by the EC2 instance URLs + port number + API address (applicable to backend)
+   1. For example, frontendURL to landing page: http://ec2-52-38-219-170.us-west-2.compute.amazonaws.com/
+   2. For example, backendURL to stats API: http://ec2-100-20-95-225.us-west-2.compute.amazonaws.com:8080/api/v1/generate/stats
+
+# Using the application
+
+## Home Page
+![Frontend1](images/frontend_homePage.png)
+
+#### Configuring loglines to be generated
+- Repeating Loglines
+  - `%`Enter the percentage of repeating loglines. The percentage entered will be used as a probability that the next line is repeating.
+- Field Settings
+  - `Time stamp`
+  - `Processing time`
+  - `Current user ID`
+  - `Business GUID`
+  - `Path to file`
+  - `File SHA256`
+  - `Disposition`
+- Custom Logs
+  - `Edit` - press the edit button
+  ![Frontend2](images/frontend_customLogs.png)
+    - In the pop-up window, in JSON format copy loglines into the text box
+
+#### Selecting a mode
+- Stream mode
+  - Stream Address: Specify a `Stream Address` to stream to
+  - Log Rate: Specify a log rate in logs/s
+  - Save logs: Select the checkbox if you'd like to save the streamed logs to file (S3 bucket)
+  - Click `Start`
+- Batch mode
+  - Number of Logs: Specify the number of logline to be included in the batch file
+  - Click `Start`
+
+## Active Jobs Page
+![Frontend1](images/frontend_activeJobsPage.png)
+
+## History Page
+![Frontend1](images/frontend_historyPage.png)
+
 
 
