@@ -1,5 +1,6 @@
 package com.ad1.loggenerator.service.implementation;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import com.ad1.loggenerator.exception.AWSServiceNotAvailableException;
 import com.ad1.loggenerator.exception.FilePathNotFoundException;
 import com.ad1.loggenerator.model.JobStatus;
 import com.ad1.loggenerator.model.SelectionModel;
@@ -34,9 +36,11 @@ import reactor.core.publisher.Mono;
 public class StreamingService {
 
     private LogService logService;
+    private AWSStreamService awsStreamService;
 
-    public StreamingService(@Autowired LogService logService) {
+    public StreamingService(@Autowired LogService logService, @Autowired AWSStreamService awsStreamService) {
         this.logService = logService;
+        this.awsStreamService = awsStreamService;
     }
 
     /**
@@ -86,67 +90,147 @@ public class StreamingService {
         logService.preProcessCustomLogs(selectionModel.getCustomLogs(), selectionModel);
         Set<String> masterFieldList = logService.getMasterFieldsList(selectionModel.getCustomLogs());
 
-        while (streamJobTracker.getStatus() == JobStatus.ACTIVE) {
-            // generate batchSize number of logs
-            for (int i = 0; i < batchSize; i++) {
-                // if no repeating log, generate a new log, otherwise add the repeating log
-                if (repeatingLog == null) {
-                    logs[i] = logService.generateLogLine(selectionModel, masterFieldList);
+        // should logs be saved
+        boolean saveLogs = selectionModel.getStreamSettings().isSaveLogs();
+
+        // File and FileWriter for savings log lines
+        File tempLogFile = null;
+        FileWriter fileWriter = null;
+
+        try {
+            boolean firstLogSaved = false;
+
+            if (saveLogs) {
+                // FileWriter for savings log lines
+                tempLogFile = new File(streamJobTracker.getJobId() + ".json");
+                fileWriter = new FileWriter(tempLogFile, true);
+
+                // delete file if it already exists
+                if (tempLogFile.exists()) {
+                    tempLogFile.delete();
+                }
+
+                // Check if the file exists, create a new one if it doesn't exist
+                if (!tempLogFile.exists()) {
+                    tempLogFile.createNewFile();
+                }
+
+                // write a [ to begin the log file
+                fileWriter.write("[");
+            }
+
+            while (streamJobTracker.getStatus() == JobStatus.ACTIVE) {
+                // generate batchSize number of logs
+                for (int i = 0; i < batchSize; i++) {
+                    // if no repeating log, generate a new log, otherwise add the repeating log
+                    if (repeatingLog == null) {
+                        logs[i] = logService.generateLogLine(selectionModel, masterFieldList);
+                    } else {
+                        logs[i] = repeatingLog;
+                        repeatingLog = null;
+                    }
+
+                    // determine if a log lines repeats
+                    if (Math.random() < selectionModel.getRepeatingLoglinesPercent()) {
+                        repeatingLog = logs[i];
+                    }
+
+                    // writing logs to temp file
+                    if (saveLogs) {
+                        if (firstLogSaved) { // add delimiter if not first log line written
+                            fileWriter.write(",\n");
+                        }
+                        // Write the log lines to the temp log file
+                        fileWriter.write(logs[i].toString());
+
+                        firstLogSaved = true;
+                    }
+                }
+                // nanoseconds until next request time
+                nsToNextRequest = nextSendNanoTime - System.nanoTime();
+
+                // sleep for nsToNextRequest
+                if (nsToNextRequest >= 0) {
+                    // sleep time is subject to precision of system schedulers
+                    Thread.sleep(nsToNextRequest / 1000000, (int) nsToNextRequest % 1000000);
+
+                    // update next send time
+                    nextSendNanoTime += nsBetweenRequests;
+                } else if (nsToNextRequest >= -100000000) {
+                    // if nsToNextRequest is behind but within 100ms, attempt to catch up next
+                    // request
+                    nextSendNanoTime += nsBetweenRequests;
                 } else {
-                    logs[i] = repeatingLog;
-                    repeatingLog = null;
+                    // if nsToNextRequest is behind by more than 100ms, reset nextSendNanoTime
+                    nextSendNanoTime = System.nanoTime() + nsBetweenRequests;
                 }
 
-                // determine if a log lines repeats
-                if (Math.random() < selectionModel.getRepeatingLoglinesPercent()) {
-                    repeatingLog = logs[i];
+                // set up post request
+                Mono<String> response = webClient.post()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(logs)
+                        .retrieve()
+                        .bodyToMono(String.class);
+
+                // initiate post request and receive response from address
+                response.subscribe(
+                        res -> {
+                            // System.out.println("Successful response: " + res);
+                        },
+                        error -> {
+                            streamJobTracker.setStatus(JobStatus.FAILED);
+                            errorMessage[0] = "Error while making the request: " + error;
+                            System.out.println(error);
+                        });
+
+                // increment log count by batch size
+                streamJobTracker.setLogCount(streamJobTracker.getLogCount() + batchSize);
+            }
+
+            // upload logs to s3 is saveLogs
+            if (saveLogs) {
+                // write a ] to end the log file
+                fileWriter.write("]");
+                fileWriter.close();
+
+                // upload logs to s3
+                try {
+                    awsStreamService.saveLogsToAWSS3(streamJobTracker);
+                } catch (AWSServiceNotAvailableException e) {
+                    // Mark the job as failed if exception occurred
+                    streamJobTracker.setStatus(JobStatus.FAILED);
+
+                    throw new AWSServiceNotAvailableException(e.getMessage());
+                } catch (RuntimeException e) {
+                    // Mark the job as failed if exception occurred
+                    streamJobTracker.setStatus(JobStatus.FAILED);
+
+                    throw new RuntimeException(e.getMessage());
+                } finally {
+                    // delete temp file if exists
+                    if (tempLogFile.exists()) {
+                        tempLogFile.delete();
+                    }
                 }
             }
+        } catch (IOException e) {
+            // Mark the job as failed if exception occurred
+            streamJobTracker.setStatus(JobStatus.FAILED);
 
-            // nanoseconds until next request time
-            nsToNextRequest = nextSendNanoTime - System.nanoTime();
-
-            // sleep for nsToNextRequest
-            if (nsToNextRequest >= 0) {
-                // sleep time is subject to precision of system schedulers
-                Thread.sleep(nsToNextRequest / 1000000, (int) nsToNextRequest % 1000000);
-
-                // update next send time
-                nextSendNanoTime += nsBetweenRequests;
-            } else if (nsToNextRequest >= -100000000) {
-                // if nsToNextRequest is behind but within 100ms, attempt to catch up next
-                // request
-                nextSendNanoTime += nsBetweenRequests;
-            } else {
-                // if nsToNextRequest is behind by more than 100ms, reset nextSendNanoTime
-                nextSendNanoTime = System.nanoTime() + nsBetweenRequests;
+            // delete temp file if exists
+            if (tempLogFile != null && tempLogFile.exists()) {
+                tempLogFile.delete();
             }
-
-            // set up post request
-            Mono<String> response = webClient.post()
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue(logs)
-                    .retrieve()
-                    .bodyToMono(String.class);
-
-            // initiate post request and receive response from address
-            response.subscribe(
-                    res -> {
-                        // System.out.println("Successful response: " + res);
-                    },
-                    error -> {
-                        streamJobTracker.setStatus(JobStatus.FAILED);
-                        errorMessage[0] = "Error while making the request: " + error;
-                        System.out.println(error);
-                    });
-
-            // increment log count by batch size
-            streamJobTracker.setLogCount(streamJobTracker.getLogCount() + batchSize);
+            throw new FilePathNotFoundException(e.getMessage());
         }
 
         if (!errorMessage[0].isEmpty()) {
             return errorMessage[0];
         }
+
+        // Mark the job as completed
+        streamJobTracker.setStatus(JobStatus.COMPLETED);
+
         return "Successfully streamed to address.";
     }
 
@@ -202,12 +286,15 @@ public class StreamingService {
             streamJobTracker.setStatus(JobStatus.FAILED);
             throw new FilePathNotFoundException(e.getMessage());
         }
+
+        // Mark the job as completed
+        streamJobTracker.setStatus(JobStatus.COMPLETED);
     }
 
     /**
      * Sends a single post request to specified address and returns
      * true if the request was successful
-     * 
+     *
      * @param selectionModel
      * @return
      */
