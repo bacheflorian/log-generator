@@ -67,6 +67,7 @@ public class BatchServiceTest {
 
     private BatchTracker batchTracker;
 
+    private final String uuidRegex = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$";
     private static String batchModeFolder = "C:\\log-generator\\batch\\";
     private static String jsonRegexString = "^\\[((\\{(\".*\":.*)*\\})(,\\s)?)*\\]$";
 
@@ -556,6 +557,13 @@ public class BatchServiceTest {
             .preProcessCustomLogs(or(any(List.class), eq(null)), any(SelectionModel.class));
         verify(logService, times(1))
             .getMasterFieldsList(or(any(List.class), eq(null)));
+    }
+
+    @Test
+    public void test_batchMode_testGenerateJobIdFormat_29() {
+        String jobIdActual = batchService.generateJobId();
+
+        assertTrue(jobIdActual.matches(uuidRegex), "Job id format should be a UUID");
     }
 
     private SelectionModel createSelectionModel(BatchSettings batchSettings, double repeatingLogLinesPercentage) {
