@@ -26,6 +26,7 @@ import {
 } from '@chakra-ui/react';
 import { isNaN } from 'formik';
 import React, { useCallback, useEffect, useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 
 function CustomLogsModal({
   isOpen,
@@ -93,7 +94,7 @@ function CustomLogsModal({
         };
 
         // set random id to custom log
-        customLogs[index].id = crypto.randomUUID();
+        customLogs[index].id = uuidv4();
       });
 
       // set customLogs field
@@ -191,7 +192,7 @@ function CustomLogsModal({
                   ...field.value,
                   {
                     ...defaultCustomLog,
-                    id: crypto.randomUUID(),
+                    id: uuidv4(),
                   },
                 ])
               }
