@@ -236,16 +236,11 @@ public class StreamingService {
 
     public void streamToFile(SelectionModel selectionModel, StreamTracker streamJobTracker) {
 
-        // create currentTimeDate as a String to append to filepath
-        LocalDateTime currentDateTime = LocalDateTime.now();
-        DateTimeFormatter formatDateTime = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
-        String timestamp = currentDateTime.format(formatDateTime);
-
         // reset the start time of the stream
         streamJobTracker.setLastPing(System.currentTimeMillis() / 1000);
 
         // specify filepath location for stream file
-        String filename = "C:\\log-generator\\stream\\" + timestamp + ".json";
+        String filename = "C:\\log-generator\\stream\\" + streamJobTracker.getJobId() + ".json";
 
         // remove fields that should not be included in custom logs
         logService.preProcessCustomLogs(selectionModel.getCustomLogs(), selectionModel);
