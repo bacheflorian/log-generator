@@ -123,6 +123,10 @@ public class LogService {
 
         FieldSettings fieldSettings = selectionModel.getFieldSettings();
 
+        if (customLogs == null) {
+            return;
+        }
+
         for (CustomLog customLog: customLogs) {
             if (customLog.getFields().containsKey("timeStamp")
                         && !fieldSettings.getTimeStamp().getInclude()) {
