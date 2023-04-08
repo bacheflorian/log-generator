@@ -263,12 +263,12 @@ public class StreamingService {
                 streamJobTracker.setLogCount(streamJobTracker.getLogCount() + 1);
 
                 // determine if a log lines repeats
-                if (Math.random() < selectionModel.getRepeatingLoglinesPercent()) {
+                if (Math.random() < selectionModel.getRepeatingLoglinesPercent() 
+                        && streamJobTracker.getStatus() == JobStatus.ACTIVE) {
                     fileWriter.write(",\n");
                     fileWriter.write(logLine.toString());
                     streamJobTracker.setLogCount(streamJobTracker.getLogCount() + 1);
                 }
-
             }
 
             // write a ] to end the log file
