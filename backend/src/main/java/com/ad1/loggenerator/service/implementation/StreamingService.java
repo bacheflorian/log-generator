@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import com.ad1.loggenerator.exception.AWSServiceNotAvailableException;
@@ -118,21 +119,20 @@ public class StreamingService {
                 // write a [ to begin the log file
                 fileWriter.write("[");
             }
-
             while (streamJobTracker.getStatus() == JobStatus.ACTIVE) {
                 // generate batchSize number of logs
                 for (int i = 0; i < batchSize; i++) {
                     // if no repeating log, generate a new log, otherwise add the repeating log
                     if (repeatingLog == null) {
                         logs[i] = logService.generateLogLine(selectionModel, masterFieldList);
+
+                        // determine if a log lines repeats
+                        if (Math.random() < selectionModel.getRepeatingLoglinesPercent()) {
+                            repeatingLog = logs[i];
+                        }
                     } else {
                         logs[i] = repeatingLog;
                         repeatingLog = null;
-                    }
-
-                    // determine if a log lines repeats
-                    if (Math.random() < selectionModel.getRepeatingLoglinesPercent()) {
-                        repeatingLog = logs[i];
                     }
 
                     // writing logs to temp file
@@ -309,6 +309,8 @@ public class StreamingService {
                     .toEntity(String.class)
                     .block();
         } catch (WebClientResponseException e) {
+            return false;
+        } catch (WebClientRequestException e) {
             return false;
         }
 
