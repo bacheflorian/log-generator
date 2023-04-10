@@ -167,8 +167,8 @@ To deploy the full stack application for the first time or for future updates fo
   - `File SHA256`
   - `Disposition`
 - Custom Logs
-  - `Edit` - press the edit button
-  ![Frontend2](images/frontend_customLogs.png)
+  - `Edit` - press the edit button <br/>
+  ![Frontend2](images/frontend_customLogs.png) <br/>
     - In the pop-up window, in JSON format copy loglines into the text box
 
 #### Selecting a mode
