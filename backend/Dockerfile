@@ -44,7 +44,4 @@ COPY --from=build ${DEPENDENCY}/BOOT-INF/lib /app/lib
 COPY --from=build ${DEPENDENCY}/META-INF /app/META-INF
 COPY --from=build ${DEPENDENCY}/BOOT-INF/classes /app
 
-# Set working directory to /app instead of root of the host system
-WORKDIR /app
-
-ENTRYPOINT ["java","-cp","/app:/app/lib/*","com.ad1.loggenerator.Main"]
+ENTRYPOINT ["java","-cp","app:app/lib/*","com.ad1.loggenerator.Main"]
