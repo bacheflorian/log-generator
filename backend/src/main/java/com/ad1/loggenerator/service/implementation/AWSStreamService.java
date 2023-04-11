@@ -214,7 +214,7 @@ public class AWSStreamService {
         // create s3 client instance
         AmazonS3 s3Client = awsLogService.createS3Client();
         // specify the local file path to upload
-        File tempLogFile = new File(streamJobTracker.getJobId() + ".json");
+        File tempLogFile = new File("/app/" + streamJobTracker.getJobId() + ".json");
         if (!tempLogFile.exists()) {
             throw new RuntimeException("temp log file do not exist");
         }
