@@ -1,7 +1,7 @@
 ## Instructions for dockerizing: Save, build project and then run command: docker build -t backend .
 
 #### Build the application
-FROM openjdk:19.alpine3.15 as build
+FROM openjdk:19-alpine3.15 as build
 
 # Create and set the current working directory inside the image
 WORKDIR /app
