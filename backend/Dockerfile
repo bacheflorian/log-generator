@@ -1,7 +1,7 @@
 ## Instructions for dockerizing: Save, build project and then run command: docker build -t backend .
 
 #### Build the application
-FROM openjdk:18-alpine3.15 as build
+FROM openjdk:19.alpine3.15 as build
 
 # Create and set the current working directory inside the image
 WORKDIR /app
@@ -32,7 +32,7 @@ RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../*.jar)
 
 
 #### A minimal docker image with command to run the app
-FROM openjdk:18-alpine3.15
+FROM openjdk:19-alpine3.15
 
 # Add the EXPOSE instructions
 EXPOSE 8080
