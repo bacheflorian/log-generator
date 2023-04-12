@@ -194,7 +194,7 @@ public class StreamingServiceTest {
     @Test
     public void test_streamToFile_streamTrackerShouldHaveFAILEDStatus_7() {
         StreamTracker streamTracker = new StreamTracker();
-        streamTracker.setJobId(">");
+        streamTracker.setJobId("\0");
 
         assertThrows(
                 FilePathNotFoundException.class,

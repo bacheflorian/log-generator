@@ -284,8 +284,8 @@ public class BatchServiceTest {
 
     @Test
     public void test_batchMode_batchTrackerShouldHaveFAILEDStatus_13() {
-        selectionModel1.setJobId(">");
-        batchTracker.setJobId(">");
+        selectionModel1.setJobId("\0");
+        batchTracker.setJobId("\0");
 
         assertThrows(
                 FilePathNotFoundException.class,
