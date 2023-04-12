@@ -284,8 +284,7 @@ function CustomLogsModal({
               <Flex
                 h="2.5em"
                 w="full"
-                mt="0.4em"
-                px="0.2em"
+                mt="0.2em"
                 align="flex-start"
                 justifyContent="space-between"
               >
@@ -298,7 +297,7 @@ function CustomLogsModal({
                   isInvalid={false}
                   value={null}
                   w="15em"
-                  pt="0.15em"
+                  pt="0.2em"
                 />
                 <IconButton
                   aria-label="Download"
