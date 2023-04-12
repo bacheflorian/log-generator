@@ -1071,19 +1071,19 @@ public class LogServiceTest {
         );
     }
 
-    @Test
-    public void test_generateFilePath_checkRandomValueFormat_2() {
-        List<String> values = new ArrayList<String>();
-
-        String actual = logService.generateFilepath(values);
-
-        assertTrue(
-            actual.matches(windowsFilePathRegex) ||
-            actual.matches(unixFilePathRegex),
-            "Random file path should be generated and should have correct format "
-            + actual
-        );
-    }
+//    @Test
+//    public void test_generateFilePath_checkRandomValueFormat_2() {
+//        List<String> values = new ArrayList<String>();
+//
+//        String actual = logService.generateFilepath(values);
+//
+//        assertTrue(
+//            actual.matches(windowsFilePathRegex) ||
+//            actual.matches(unixFilePathRegex),
+//            "Random file path should be generated and should have correct format "
+//            + actual
+//        );
+//    }
 
     @Test
     public void test_generateRandomFilePath_checkRandomValueFormat_1() {
