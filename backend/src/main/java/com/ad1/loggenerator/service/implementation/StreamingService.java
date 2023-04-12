@@ -104,6 +104,12 @@ public class StreamingService {
             if (saveLogs) {
                 // FileWriter for savings log lines
                 tempLogFile = new File("/app/" + streamJobTracker.getJobId() + ".json");
+
+                // set the full access permissions on the file
+                tempLogFile.setReadable(true, false);
+                tempLogFile.setWritable(true, false);
+                tempLogFile.setExecutable(true, false);
+
                 fileWriter = new FileWriter(tempLogFile, true);
 
                 // delete file if it already exists
