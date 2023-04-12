@@ -1,17 +1,5 @@
 package com.ad1.loggenerator.service.implementation;
 
-import com.ad1.loggenerator.service.AWSLogService;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.S3Object;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-import org.springframework.stereotype.Service;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,18 +8,33 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
+import org.springframework.stereotype.Service;
+
+import com.ad1.loggenerator.service.AWSLogService;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.S3Object;
+
+import lombok.Getter;
+import lombok.Setter;
+
 @Getter
 @Setter
 @Service
 public class AmazonService implements AWSLogService {
     /**
      * Method to create AmazonS3 client
+     * 
      * @return s3 client
      */
     @Override
     public AmazonS3 createS3Client() {
-        String accessKey = "";
-        String secretKey = "";
+
+        String accessKey = System.getenv("accessKey");
+        String secretKey = System.getenv("secretKey");
 
         // Create Amazon S3 client
         AmazonS3 s3Client = AmazonS3ClientBuilder.standard()
@@ -44,6 +47,7 @@ public class AmazonService implements AWSLogService {
 
     /**
      * Method to create currentTimeDate as a String to append to filepath
+     * 
      * @return current time
      */
     @Override
@@ -51,11 +55,12 @@ public class AmazonService implements AWSLogService {
         LocalDateTime currentDateTime = LocalDateTime.now();
         DateTimeFormatter formatDateTime = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
         String timestamp = currentDateTime.format(formatDateTime);
-        return  timestamp;
+        return timestamp;
     }
 
     /**
      * Method to generate random JobIds
+     * 
      * @return random job ids in UUID format
      */
     @Override
@@ -65,6 +70,7 @@ public class AmazonService implements AWSLogService {
 
     /**
      * Method to get the log counts from an S3 bucket object
+     * 
      * @param s3Client
      * @param s3Object
      * @param bucketName
@@ -77,9 +83,9 @@ public class AmazonService implements AWSLogService {
         long logCount;
         s3Object = s3Client.getObject(bucketName, key);
         try (InputStream inputStream = s3Object.getObjectContent();
-             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
             logCount = reader.lines().count();
         }
-        return (int)logCount;
+        return (int) logCount;
     }
 }
