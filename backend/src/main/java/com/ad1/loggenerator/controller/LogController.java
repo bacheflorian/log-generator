@@ -44,7 +44,7 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 @RestController
 @RequestMapping("/api/v1/generate")
-@CrossOrigin("http://localhost:3000/")
+@CrossOrigin("http://ec2-52-38-219-170.us-west-2.compute.amazonaws.com/")
 public class LogController {
 
     private final BatchTrackerService batchServiceTracker;

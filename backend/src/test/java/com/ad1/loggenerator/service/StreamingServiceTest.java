@@ -102,7 +102,7 @@ public class StreamingServiceTest {
         repeatingLoglinesPercentage = 0;
         malwareSettings = new MalwareSettings(true, true, true);
         mode = "Stream";
-        streamSettings = new StreamSettings("http://localhost:" + mockBackEnd.getPort(), 10, true);
+        streamSettings = new StreamSettings("http://ec2-100-20-95-225.us-west-2.compute.amazonaws.com/" + mockBackEnd.getPort(), 10, true);
         batchSettings = new BatchSettings(0);
         customLogs = new ArrayList<CustomLog>();
 
