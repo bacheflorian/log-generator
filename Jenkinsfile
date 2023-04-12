@@ -7,9 +7,8 @@ pipeline {
     stages {
         stage('Checkout GitHub repository') {
             steps {
-                git branch: 'production',
-                    credentialsId: 'github_PAT',
-                    url: 'https://github.com/bacheflorian/log-generator'
+                git branch: 'prod',
+                    url: 'https://github.com/andymbwu/log-generator'
             }
         }
         stage('Building frontend image') {
