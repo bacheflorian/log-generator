@@ -99,19 +99,20 @@ public class StreamingService {
             if (saveLogs) {
                 // FileWriter for savings log lines
                 tempLogFile = new File("logs\\stream\\" + streamJobTracker.getJobId() + ".json");
+                fileWriter = new FileWriter(tempLogFile, true);
+
+                // delete file if it already exists
+                if (tempLogFile.exists()) {
+                    tempLogFile.delete();
+                }
 
                 // Check if the file exists, create a new one if it doesn't exist
                 if (!tempLogFile.exists()) {
                     tempLogFile.createNewFile();
                 }
 
-                // FileWriter to append to the log file
-                fileWriter = new FileWriter(tempLogFile, true);
-
-                // write a [ to begin the log file if it is empty
-                if (tempLogFile.length() == 0) {
-                    fileWriter.write("[");
-                }
+                // write a [ to begin the log file
+                fileWriter.write("[");
             }
             while (streamJobTracker.getStatus() == JobStatus.ACTIVE) {
                 // generate batchSize number of logs
