@@ -45,6 +45,6 @@ COPY --from=build ${DEPENDENCY}/META-INF /app/META-INF
 COPY --from=build ${DEPENDENCY}/BOOT-INF/classes /app
 
 # Set permissions on the /app directory
-RUN chmod 777 /app
+RUN umask 000
 
 ENTRYPOINT ["java","-cp","app:app/lib/*","com.ad1.loggenerator.Main"]
