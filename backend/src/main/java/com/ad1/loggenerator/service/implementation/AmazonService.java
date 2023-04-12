@@ -32,8 +32,9 @@ public class AmazonService implements AWSLogService {
      */
     @Override
     public AmazonS3 createS3Client() {
-        String accessKey = "";
-        String secretKey = "";
+
+        String accessKey = System.getenv("accessKey");
+        String secretKey = System.getenv("secretKey");
 
         // Create Amazon S3 client
         AmazonS3 s3Client = AmazonS3ClientBuilder.standard()
