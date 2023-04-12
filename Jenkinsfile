@@ -7,8 +7,7 @@ pipeline {
     stages {
         stage('Checkout GitHub repository') {
             steps {
-                git branch: 'production',
-                    credentialsId: 'github_PAT',
+                git branch: 'prod',
                     url: 'https://github.com/bacheflorian/log-generator'
             }
         }
