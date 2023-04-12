@@ -1,7 +1,8 @@
-import { AddIcon, SmallCloseIcon } from '@chakra-ui/icons';
+import { AddIcon, DownloadIcon, SmallCloseIcon } from '@chakra-ui/icons';
 import {
   Button,
   Divider,
+  Flex,
   FormControl,
   FormErrorMessage,
   FormLabel,
@@ -25,7 +26,7 @@ import {
   WrapItem,
 } from '@chakra-ui/react';
 import { isNaN } from 'formik';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 function CustomLogsModal({
@@ -38,6 +39,7 @@ function CustomLogsModal({
 }) {
   const [customLogsText, setCustomLogsText] = useState('');
   const [customLogsTextError, setCustomLogsTextError] = useState(null);
+  const fileRef = useRef(null); // ref for the file input
 
   function parseKeyValue(key, value, emptyValue) {
     if (value === '') return emptyValue;
@@ -58,6 +60,11 @@ function CustomLogsModal({
       setCustomLogsText(JSON.stringify(field.value, replacer, 2));
     }
     setCustomLogsTextError(null);
+
+    // reset fileRef
+    if (fileRef.current) {
+      fileRef.current.value = null;
+    }
   }, [field.value]);
 
   useEffect(() => {
@@ -71,6 +78,11 @@ function CustomLogsModal({
 
   function loadCustomLogs() {
     let error = null;
+
+    // reset fileRef
+    if (fileRef.current) {
+      fileRef.current.value = null;
+    }
 
     try {
       // parse text
@@ -111,6 +123,66 @@ function CustomLogsModal({
       setCustomLogsTextError(error);
     }
   }
+
+  const handleFileUpload = event => {
+    // validate file it given
+    if (!event.target.files[0]) {
+      return;
+    }
+    const selectedFile = event.target.files[0];
+
+    const allowedTypes = ['text/plain', 'application/json'];
+
+    // validte file is in allowedTypes
+    if (allowedTypes.includes(selectedFile.type)) {
+      // read file contents
+      const reader = new FileReader();
+      reader.onload = event => {
+        const content = event.target.result;
+        console.log(content);
+
+        // try to format json, otherwise set to text
+        let data;
+        try {
+          data = JSON.stringify(JSON.parse(content), null, 2);
+          console.log(data);
+        } catch (error) {
+          data = content;
+        }
+
+        setCustomLogsText(data);
+      };
+      reader.readAsText(selectedFile);
+    } else {
+      // reset fileRef
+      if (fileRef.current) {
+        fileRef.current.value = null;
+      }
+      alert('Please upload a .json or .txt file.');
+    }
+  };
+
+  const handleDownload = () => {
+    // try to format json, otherwise set to text
+    let data;
+    try {
+      data = JSON.stringify(JSON.parse(customLogsText), null, 2);
+      console.log(data);
+    } catch (error) {
+      data = customLogsText;
+    }
+
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `customLogs${new Date()
+      .toLocaleString()
+      .replace(/[/\\?%*:|"<>]/g, '-')
+      .replace(/, /g, '_')}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={onCloseModal} size="6xl" closeOnEsc={false}>
@@ -201,23 +273,50 @@ function CustomLogsModal({
                 ])
               }
             />
-            <FormControl pt="0.75em" isInvalid={customLogsTextError}>
+            <FormControl pt="0.75em" w="85%" isInvalid={customLogsTextError}>
               <FormLabel>Load custom loglines</FormLabel>
               <Textarea
-                placeholder="Insert custom logs in JSON format"
-                w="85%"
+                placeholder="Insert custom logs in JSON format, must be an array"
                 h="13em"
                 value={customLogsText}
                 onChange={e => setCustomLogsText(e.target.value)}
               />
+              <Flex
+                h="2.5em"
+                w="full"
+                mt="0.4em"
+                px="0.2em"
+                align="flex-start"
+                justifyContent="space-between"
+              >
+                <Input
+                  variant="filled"
+                  type="file"
+                  accept=".json,.txt"
+                  ref={fileRef}
+                  onChange={handleFileUpload}
+                  isInvalid={false}
+                  value={null}
+                  w="15em"
+                  pt="0.15em"
+                />
+                <IconButton
+                  aria-label="Download"
+                  variant="ghost"
+                  onClick={handleDownload}
+                  icon={<DownloadIcon />}
+                />
+              </Flex>
               <FormErrorMessage>{customLogsTextError}</FormErrorMessage>
             </FormControl>
-            <HStack spacing="1em" pt="0.1em">
+
+            <HStack spacing="0.5em" pt="0.3em">
               <Button colorScheme="green" onClick={loadCustomLogs}>
                 Load
               </Button>
+
               <Button variant="ghost" onClick={updateCustomLogs}>
-                Reset
+                Reset Text
               </Button>
             </HStack>
           </VStack>
