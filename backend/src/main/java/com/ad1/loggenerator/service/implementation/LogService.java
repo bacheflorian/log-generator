@@ -388,8 +388,8 @@ public class LogService {
      */
     public String generateRandomFilepath() {
         // random information
-        String[] folders = { "\\Program Files", "\\Windows", "\\Program Files (x86)",
-                "\\Program Files (x86)", "/tmp", "/home" };
+        String[] folders = { "C:\\Program Files", "C:\\Windows", "C:\\Program Files (x86)",
+                "C:\\Program Files (x86)\\Common Files", "C:\\tmp", "C:\\home" };
         String[] ext = { ".pdf", ".xlsx", ".csv", ".txt", ".json", ".sys", ".docx", ".jpg", ".zip" };
 
         // get random path to file
@@ -402,8 +402,7 @@ public class LogService {
         String filename = UUID.randomUUID().toString() + ext[index];
 
         // combine and return
-        File file = new File(pathToFile, filename);
-        return file.getAbsolutePath();
+        return (pathToFile + "\\" + filename);
     }
 
     /**
